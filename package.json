@@ -1,0 +1,42 @@
+{
+  "name": "media-auth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=24 <25",
+    "npm": ">=11 <12"
+  },
+  "packageManager": "npm@11.15.0",
+  "scripts": {
+    "typecheck": "tsc --noEmit && tsc --noEmit -p packages/core/tsconfig.json && tsc --noEmit -p packages/media/tsconfig.json",
+    "lint": "eslint . && node scripts/check-boundaries.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "build": "node scripts/build.mjs",
+    "build:extension": "node scripts/build.mjs extension",
+    "fixture:generate": "node scripts/generate-fixture.mjs",
+    "fixture:serve": "node scripts/serve-fixture.mjs",
+    "smoke:cli": "node scripts/smoke-cli.mjs",
+    "test:browser": "node scripts/smoke-extension.mjs",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm test && npm run build && npm run smoke:cli"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.0",
+    "@types/chrome": "0.3.4",
+    "@types/node": "24.19.1",
+    "esbuild": "0.28.2",
+    "eslint": "10.12.0",
+    "prettier": "3.9.9",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.71.1",
+    "vitest": "5.0.3"
+  }
+}

@@ -1,0 +1,50 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+body {
+  margin: 0;
+}
+main {
+  padding: 18px;
+}
+h1 {
+  font-size: 1.5rem;
+  margin-top: 0;
+}
+small {
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+h2 {
+  font-size: 1rem;
+}
+button {
+  font: inherit;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+}
+ul {
+  padding: 0;
+  list-style: none;
+}
+li {
+  margin-bottom: 12px;
+  overflow-wrap: anywhere;
+}
+li button {
+  width: 100%;
+  text-align: left;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.note {
+  font-size: 0.8rem;
+}

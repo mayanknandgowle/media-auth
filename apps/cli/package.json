@@ -1,0 +1,16 @@
+{
+  "name": "@media-auth/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "exports": "./src/command.ts",
+  "bin": {
+    "media-auth": "./bin/media-auth.mjs"
+  },
+  "dependencies": {
+    "@media-auth/core": "0.1.0",
+    "@media-auth/media": "0.1.0",
+    "@media-auth/analyzers": "0.1.0"
+  }
+}

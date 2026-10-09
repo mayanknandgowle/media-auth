@@ -1,0 +1,12 @@
+{
+  "name": "@media-auth/extension",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "dependencies": {
+    "@media-auth/core": "0.1.0",
+    "@media-auth/media": "0.1.0",
+    "@media-auth/analyzers": "0.1.0"
+  }
+}

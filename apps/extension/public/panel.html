@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MediaAuth</title>
+    <link rel="stylesheet" href="panel.css" />
+    <script src="panel.js" type="module"></script>
+  </head>
+  <body>
+    <main>
+      <h1>MediaAuth <small>Foundation</small></h1>
+      <p>
+        Inspect image evidence locally. This version supports PNG files; it does not detect AI
+        generation or verify provenance.
+      </p>
+      <p>
+        Open this panel from the toolbar on the page to inspect. Discover lists page images; only
+        selecting an image acquires its bytes.
+      </p>
+      <button id="discover" type="button">Discover page images</button>
+      <p id="status" role="status" aria-live="polite">No page inspected.</p>
+      <ul id="candidates" aria-label="Discovered images"></ul>
+      <section aria-labelledby="result-heading">
+        <h2 id="result-heading">Evidence report</h2>
+        <p id="summary">Select an image to begin.</p>
+        <pre id="result" tabindex="0" aria-label="Structured analysis result"></pre>
+      </section>
+      <p class="note">
+        Only same-origin HTTP(S) image assets can be acquired. No screenshots, remote analysis,
+        telemetry, or saved media. Fetching the selected asset contacts its origin without
+        credentials. Limits: 8 MiB, 40 million pixels, 10 seconds.
+      </p>
+    </main>
+  </body>
+</html>

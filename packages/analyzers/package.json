@@ -1,0 +1,15 @@
+{
+  "name": "@media-auth/analyzers",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts",
+    "./web": "./src/web.ts"
+  },
+  "dependencies": {
+    "@media-auth/core": "0.1.0"
+  }
+}

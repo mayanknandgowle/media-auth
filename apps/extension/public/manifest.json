@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "MediaAuth Foundation",
+  "version": "0.1.0",
+  "minimum_chrome_version": "116",
+  "description": "Inspect explicitly selected media locally and explain available evidence.",
+  "permissions": ["activeTab", "scripting", "sidePanel"],
+  "action": { "default_title": "Open MediaAuth" },
+  "background": { "service_worker": "background.js", "type": "module" },
+  "side_panel": { "default_path": "panel.html" },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; connect-src 'none'; img-src 'none'"
+  }
+}
