@@ -22,4 +22,6 @@ This is an aspirational sequence, not a delivery schedule. Later phases require 
 | 15 — SDK / API                                      | Stable external contracts, CLI/SDK/API distribution         | Compatibility, security, and lifecycle guarantees                    |
 | 16 — Ecosystem                                      | Third-party providers and integrations                      | Isolation, capability permissions, review, attribution               |
 
+The first Phase 1 increment adds bounded 8-bit baseline/progressive JPEG probing and CLI `probe`, alongside static PNG. Broader formats and complete parser validation remain deferred; see [ADR 0004](docs/adr/0004-jpeg-probe-and-cli.md).
+
 Exact identity and minimal discovery already exist in Phase 0; their later phases refer to broader capabilities. No passive surveillance, face recognition, watermark cracking, or arbitrary URL-fetch service is planned as part of this foundation. See [research boundaries](docs/RESEARCH.md) for evaluation requirements.

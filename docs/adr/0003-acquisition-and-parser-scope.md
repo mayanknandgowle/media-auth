@@ -2,6 +2,8 @@
 
 Status: Accepted — 2026-10-09
 
+CLI format scope extended by [ADR 0004](0004-jpeg-probe-and-cli.md) on 2026-10-16. The PNG-only extension acquisition policy below remains in force.
+
 ## Context
 
 Arbitrary webpage media can be cross-origin, credentialed, malformed, enormous, or replaced after discovery. Screenshots lose original structures and must never masquerade as original assets. A complete multimedia/parser stack would exceed the foundation milestone.

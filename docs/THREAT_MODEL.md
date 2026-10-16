@@ -19,6 +19,12 @@ Protect selected media confidentiality, browser/page access, filesystem access, 
 | Silent upload or browsing surveillance                                           | No remote analyzer shipped; remote execution opt-in gate; no passive scripts/history/storage/telemetry                                   | New remote adapters need visible consent and privacy review                                                                             |
 | Fake certainty                                                                   | Unavailable and absence distinct; no authenticity scoring; provenance placeholders never claim absence/verification                      | Future fusion needs trust models, calibration, independent evaluation                                                                   |
 
+## JPEG scope
+
+The CLI JPEG probe checks selected marker, frame, and scan framing with a forward buffer. Lengths are checked before reading or skipping; only small frame/scan headers are copied. Each marker, including SOI, EOI, and restart markers, counts against `maxChunks`. Segment payloads and entropy intervals obey `maxChunkBytes`; marker fill bytes are bounded by `maxBytes`. The reader requests at most the smaller of 64 KiB and `maxChunkBytes`. Dimensions obey `maxPixels`.
+
+JPEG coding tables, full progressive scan progression, entropy correctness, restart MCU intervals, metadata payloads, and orientation are not validated. Successful framing inspection is not a promise of decodability or authenticity. Unsupported processes, deferred height, and trailing/concatenated streams are rejected. There is no decoder or additional native/runtime dependency. The extension remains PNG-only.
+
 ## Resource contract
 
 `DEFAULT_LIMITS` specifies `maxBytes`, `maxPixels`, `maxChunkBytes`, and `maxChunks`. Clients validate before reads; probes/hash adapters validate again so direct calls remain bounded. The filesystem and PNG scanner use at most 64 KiB per range read. Browser bytes are held in bounded memory for messaging and WebCrypto, with several temporary representations; the 8 MiB cap is not a promise of an 8 MiB peak memory footprint. Concurrent panel requests are rejected while an operation runs.
@@ -27,6 +33,6 @@ Cancellation in core is cooperative. A promise timeout cannot stop an in-process
 
 ## Tests and review
 
-Tests cover malformed/truncated/CRC-invalid PNGs, oversized dimensions/bytes/chunks, undersupplied/oversupplied streams, hash vectors, failed/invalid analyzers, duplicate registry/evidence IDs, remote opt-in, cancellation, unsafe URLs, invalid senders/messages, stale selections, and acquisition timeouts. Browser smoke and manual host UI checks have distinct scopes; see [VALIDATION.md](VALIDATION.md).
+Tests cover malformed/truncated/CRC-invalid PNGs, malformed/truncated JPEG frame and scan headers, stuffing/restart errors, JPEG marker/entropy budgets and range-adapter contracts, oversized dimensions/bytes/chunks, undersupplied/oversupplied streams, hash vectors, failed/invalid analyzers, duplicate registry/evidence IDs, remote opt-in, cancellation, unsafe URLs, invalid senders/messages, stale selections, and acquisition timeouts. Browser smoke and manual host UI checks have distinct scopes; see [VALIDATION.md](VALIDATION.md).
 
 Before adding a format, provider, remote service, or permission: identify new trust boundaries, add adversarial fixtures, define budgets, update documentation, and record any major decision. Do not add a user-supplied URL fetch API.

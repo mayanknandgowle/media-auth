@@ -13,16 +13,19 @@ import type { ExactHasher, MetadataAdapter, MetadataReadResult } from './contrac
 export type * from './contracts.js';
 
 const VERSION = '0.1.0';
-const metadataIdentity: EvidenceSource = { id: 'media-auth.container-metadata', version: VERSION };
+const metadataIdentity: EvidenceSource = { id: 'media-auth.container-metadata', version: '0.2.0' };
 
-/** Minimal metadata adapter: observations reported by the bounded PNG container probe. */
+/** Recorded encoded dimensions from supported container probes; no metadata payload parsing. */
 export const containerMetadataAdapter: MetadataAdapter = {
   identity: metadataIdentity,
   async read(media: Media): Promise<MetadataReadResult> {
-    if (media.descriptor.mimeType !== 'image/png' || !media.descriptor.dimensions)
+    if (
+      !['image/png', 'image/jpeg'].includes(media.descriptor.mimeType) ||
+      !media.descriptor.dimensions
+    )
       return {
         status: 'UNAVAILABLE',
-        reason: 'The foundation records only PNG container dimensions.',
+        reason: 'Only PNG and JPEG container dimensions are recorded.',
       };
     return {
       status: 'DETECTED',
@@ -43,6 +46,7 @@ export const containerMetadataAdapter: MetadataAdapter = {
       limitations: [
         'Container observations do not establish capture device, creator, editing history, or authenticity.',
         'EXIF, XMP, IPTC, and ICC payload parsing is not implemented.',
+        'Dimensions are encoded dimensions; metadata orientation is not applied.',
       ],
     };
   },
@@ -58,7 +62,7 @@ const metadataAnalyzer: Analyzer = {
     if (result.status !== 'DETECTED')
       return unavailableResult(
         metadataAnalyzer,
-        'The foundation records only PNG container dimensions.',
+        'Only PNG and JPEG container dimensions are recorded.',
       );
     return {
       schemaVersion: '1.0',

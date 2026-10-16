@@ -1,6 +1,6 @@
 # Privacy
 
-MediaAuth performs analysis only after explicit user selection. The CLI reads the named local file. The extension inspects the active page only after the user invokes its workflow and requests discovery, then fetches only the selected same-origin image. Discovery temporarily records a bounded candidate list; it does not analyze every image.
+MediaAuth performs analysis only after explicit user selection. The CLI reads the named local file. PNG/JPEG probing and inspection run locally; JPEG metadata payloads and orientation are not interpreted. The descriptor-only `probe` command does not run analyzers or compute an identity. The extension inspects the active page only after the user invokes its workflow and requests discovery, then fetches only the selected same-origin image. Discovery temporarily records a bounded candidate list; it does not analyze every image.
 
 No analytics, telemetry, browsing history collection, accounts, raw-media database, persistent result storage, or remote inference is implemented. Candidate selections and analysis results exist in memory. The side panel holds the displayed result until replaced or closed; the service worker may retain a bounded selection list until replaced, expired on use, or suspended. There is no guarantee of cryptographic memory erasure.
 

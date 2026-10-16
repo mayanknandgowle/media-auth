@@ -23,6 +23,26 @@ function run(command, args, expectedStatus) {
 }
 
 for (const [command, prefix] of entries) {
+  for (const [name, hash] of [
+    ['baseline.jpg', '54264ccfe6f621aa45c147b6ac4f6b829ad7165545cf2e1a27a06e0be515775d'],
+    ['progressive.jpg', 'f221219ce29cf87f8933a6f758c344ca94aa5f7524ae74943210b119f7be0b8e'],
+  ]) {
+    const probed = run(command, [...prefix, 'probe', `tests/fixtures/${name}`], 0);
+    assert.equal(probed.stderr, '');
+    const descriptor = JSON.parse(probed.stdout);
+    assert.deepEqual(Object.keys(descriptor).sort(), ['media', 'schemaVersion']);
+    assert.equal(descriptor.media.mimeType, 'image/jpeg');
+    assert.deepEqual(descriptor.media.dimensions, { width: 16, height: 8 });
+    const inspected = run(command, [...prefix, 'inspect', `tests/fixtures/${name}`], 0);
+    assert.equal(inspected.stderr, '');
+    const analysis = JSON.parse(inspected.stdout);
+    assert.equal(analysis.conclusion.verdict, 'INCONCLUSIVE');
+    assert.equal(analysis.analyzers.filter((item) => item.status === 'UNAVAILABLE').length, 5);
+    assert.equal(
+      analysis.evidence.find((item) => item.category === 'EXACT_IDENTITY').details.value,
+      hash,
+    );
+  }
   const inspected = run(command, [...prefix, 'inspect', 'tests/fixtures/known.png'], 0);
   assert.equal(inspected.stderr, '');
   const result = JSON.parse(inspected.stdout);

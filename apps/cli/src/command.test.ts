@@ -1,4 +1,4 @@
-import { mkdtemp, rm, truncate, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, truncate, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,6 +19,42 @@ afterEach(async () => {
 });
 
 describe('CLI commands', () => {
+  it.each(['baseline.jpg', 'progressive.jpg'])(
+    'probes and inspects %s without stronger authenticity claims',
+    async (name) => {
+      const bytes = await readFile(new URL(`../../../tests/fixtures/${name}`, import.meta.url));
+      const path = join(temporaryDirectory, 'misleading.png');
+      await writeFile(path, bytes);
+      const result = await executeCommand(['probe', path]);
+      expect(result).toMatchObject({
+        exitCode: 0,
+        output: {
+          schemaVersion: '1.0',
+          media: { mimeType: 'image/jpeg', dimensions: { width: 16, height: 8 } },
+        },
+      });
+      expect(Object.keys(result.output).sort()).toEqual(['media', 'schemaVersion']);
+      const inspected = await executeCommand(['inspect', path]);
+      if (inspected.exitCode !== 0 || !('analyzers' in inspected.output))
+        throw new Error('Expected JPEG analysis.');
+      expect(
+        inspected.output.analyzers.filter((analyzer) => analyzer.status === 'UNAVAILABLE'),
+      ).toHaveLength(5);
+      expect(inspected.output.conclusion.verdict).toBe('INCONCLUSIVE');
+      expect(inspected.output.evidence).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ category: 'METADATA', status: 'DETECTED' }),
+        ]),
+      );
+      expect(await executeCommand(['inspect', path])).toEqual(inspected);
+      await writeFile(path, bytes.subarray(0, bytes.length - 1));
+      expect(await executeCommand(['probe', path])).toMatchObject({
+        exitCode: 1,
+        output: { error: { code: 'INVALID_INPUT' } },
+      });
+    },
+  );
+
   it('inspects the deterministic PNG and reports unavailable analysis without an authenticity claim', async () => {
     const result = await executeCommand(['inspect', fixturePath]);
     expect(result.exitCode).toBe(0);
@@ -96,7 +132,7 @@ describe('CLI commands', () => {
     const path = join(temporaryDirectory, 'oversized.png');
     await writeFile(path, '');
     await truncate(path, DEFAULT_LIMITS.maxBytes + 1);
-    for (const command of ['inspect', 'fingerprint']) {
+    for (const command of ['probe', 'inspect', 'fingerprint']) {
       expect(await executeCommand([command, path])).toMatchObject({
         exitCode: 1,
         output: { error: { code: 'RESOURCE_LIMIT' } },

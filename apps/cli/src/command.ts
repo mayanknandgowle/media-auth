@@ -6,11 +6,12 @@ import {
   type ContentHash,
   type ErrorCode,
   type MediaSource,
+  type MediaDescriptor,
   type ResourceLimits,
 } from '@media-auth/core';
 import { createFoundationRegistry } from '@media-auth/analyzers';
 import { nodeSha256Hasher } from '@media-auth/analyzers/node';
-import { pngProbe } from '@media-auth/media';
+import { imageProbe } from '@media-auth/media';
 import { openLocalFile } from './local-file.js';
 
 export interface FingerprintResult {
@@ -21,13 +22,18 @@ export interface FingerprintResult {
   readonly limitations: readonly string[];
 }
 
+export interface ProbeResult {
+  readonly schemaVersion: '1.0';
+  readonly media: MediaDescriptor;
+}
+
 export interface ErrorResult {
   readonly schemaVersion: '1.0';
   readonly error: { readonly code: ErrorCode | 'USAGE_ERROR'; readonly message: string };
 }
 
 export type CommandResult =
-  | { readonly exitCode: 0; readonly output: AnalysisResult | FingerprintResult }
+  | { readonly exitCode: 0; readonly output: AnalysisResult | FingerprintResult | ProbeResult }
   | { readonly exitCode: 1 | 2; readonly output: ErrorResult };
 
 /** Successful analysis can contain UNAVAILABLE evidence; that is not a command failure. */
@@ -36,14 +42,14 @@ export async function executeCommand(
   limits: ResourceLimits = DEFAULT_LIMITS,
 ): Promise<CommandResult> {
   const [command, path] = args;
-  if (args.length !== 2 || (command !== 'inspect' && command !== 'fingerprint') || !path) {
+  if (args.length !== 2 || !['probe', 'inspect', 'fingerprint'].includes(command ?? '') || !path) {
     return {
       exitCode: 2,
       output: {
         schemaVersion: '1.0',
         error: {
           code: 'USAGE_ERROR',
-          message: 'Usage: media-auth <inspect|fingerprint> <local-file>',
+          message: 'Usage: media-auth <probe|inspect|fingerprint> <local-file>',
         },
       },
     };
@@ -52,14 +58,17 @@ export async function executeCommand(
   try {
     const input = await openLocalFile(path, limits);
     try {
-      let output: AnalysisResult | FingerprintResult;
-      if (command === 'inspect') {
-        const descriptor = await pngProbe.probe(input.handle, input.source, limits);
-        output = await analyze(
-          { descriptor, handle: input.handle },
-          createFoundationRegistry(nodeSha256Hasher),
-          { limits },
-        );
+      let output: AnalysisResult | FingerprintResult | ProbeResult;
+      if (command === 'inspect' || command === 'probe') {
+        const descriptor = await imageProbe.probe(input.handle, input.source, limits);
+        output =
+          command === 'probe'
+            ? { schemaVersion: '1.0', media: descriptor }
+            : await analyze(
+                { descriptor, handle: input.handle },
+                createFoundationRegistry(nodeSha256Hasher),
+                { limits },
+              );
       } else {
         output = {
           schemaVersion: '1.0',
