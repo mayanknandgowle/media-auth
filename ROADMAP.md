@@ -24,4 +24,6 @@ This is an aspirational sequence, not a delivery schedule. Later phases require 
 
 The first Phase 1 increment adds bounded 8-bit baseline/progressive JPEG probing and CLI `probe`, alongside static PNG. Broader formats and complete parser validation remain deferred; see [ADR 0004](docs/adr/0004-jpeg-probe-and-cli.md).
 
+The second Phase 1 increment adds selected static WebP RIFF/VP8/VP8L/VP8X probing to the CLI, with original fixtures, independent decode checks, and adversarial header/budget tests; see [ADR 0005](docs/adr/0005-static-webp-probe.md). Phase 1 remains incomplete: broader containers, sustained fuzzing, and more extensive adversarial corpora are future work. The extension remains PNG-only.
+
 Exact identity and minimal discovery already exist in Phase 0; their later phases refer to broader capabilities. No passive surveillance, face recognition, watermark cracking, or arbitrary URL-fetch service is planned as part of this foundation. See [research boundaries](docs/RESEARCH.md) for evaluation requirements.

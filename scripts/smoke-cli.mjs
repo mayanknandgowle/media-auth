@@ -26,12 +26,15 @@ for (const [command, prefix] of entries) {
   for (const [name, hash] of [
     ['baseline.jpg', '54264ccfe6f621aa45c147b6ac4f6b829ad7165545cf2e1a27a06e0be515775d'],
     ['progressive.jpg', 'f221219ce29cf87f8933a6f758c344ca94aa5f7524ae74943210b119f7be0b8e'],
+    ['lossy.webp', 'fc3927eee0346e9c0ac714b66e4d157b7b5e15d1d1825e5f7ee301e9ea1a6d7a'],
+    ['lossless.webp', 'f06216831f617441ac07a9fe1f8d49f91e62526b971eee3c06933b75a3411284'],
+    ['alpha.webp', '3fa682dc8d44a3252ace27090c81b2a72e5e67ba64332c0867ea84ea5f25bd38'],
   ]) {
     const probed = run(command, [...prefix, 'probe', `tests/fixtures/${name}`], 0);
     assert.equal(probed.stderr, '');
     const descriptor = JSON.parse(probed.stdout);
     assert.deepEqual(Object.keys(descriptor).sort(), ['media', 'schemaVersion']);
-    assert.equal(descriptor.media.mimeType, 'image/jpeg');
+    assert.equal(descriptor.media.mimeType, name.endsWith('.webp') ? 'image/webp' : 'image/jpeg');
     assert.deepEqual(descriptor.media.dimensions, { width: 16, height: 8 });
     const inspected = run(command, [...prefix, 'inspect', `tests/fixtures/${name}`], 0);
     assert.equal(inspected.stderr, '');

@@ -31,5 +31,6 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: node scripts/verify-jpeg-fixtures.mjs
+      - run: node scripts/verify-webp-fixtures.mjs
       - run: npm run build:extension
       - run: npm run test:browser

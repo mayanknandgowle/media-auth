@@ -13,19 +13,19 @@ import type { ExactHasher, MetadataAdapter, MetadataReadResult } from './contrac
 export type * from './contracts.js';
 
 const VERSION = '0.1.0';
-const metadataIdentity: EvidenceSource = { id: 'media-auth.container-metadata', version: '0.2.0' };
+const metadataIdentity: EvidenceSource = { id: 'media-auth.container-metadata', version: '0.3.0' };
 
 /** Recorded encoded dimensions from supported container probes; no metadata payload parsing. */
 export const containerMetadataAdapter: MetadataAdapter = {
   identity: metadataIdentity,
   async read(media: Media): Promise<MetadataReadResult> {
     if (
-      !['image/png', 'image/jpeg'].includes(media.descriptor.mimeType) ||
+      !['image/png', 'image/jpeg', 'image/webp'].includes(media.descriptor.mimeType) ||
       !media.descriptor.dimensions
     )
       return {
         status: 'UNAVAILABLE',
-        reason: 'Only PNG and JPEG container dimensions are recorded.',
+        reason: 'Only PNG, JPEG, and WebP container dimensions are recorded.',
       };
     return {
       status: 'DETECTED',
@@ -62,7 +62,7 @@ const metadataAnalyzer: Analyzer = {
     if (result.status !== 'DETECTED')
       return unavailableResult(
         metadataAnalyzer,
-        'Only PNG and JPEG container dimensions are recorded.',
+        'Only PNG, JPEG, and WebP container dimensions are recorded.',
       );
     return {
       schemaVersion: '1.0',

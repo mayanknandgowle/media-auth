@@ -19,7 +19,7 @@ afterEach(async () => {
 });
 
 describe('CLI commands', () => {
-  it.each(['baseline.jpg', 'progressive.jpg'])(
+  it.each(['baseline.jpg', 'progressive.jpg', 'lossy.webp', 'lossless.webp', 'alpha.webp'])(
     'probes and inspects %s without stronger authenticity claims',
     async (name) => {
       const bytes = await readFile(new URL(`../../../tests/fixtures/${name}`, import.meta.url));
@@ -30,13 +30,16 @@ describe('CLI commands', () => {
         exitCode: 0,
         output: {
           schemaVersion: '1.0',
-          media: { mimeType: 'image/jpeg', dimensions: { width: 16, height: 8 } },
+          media: {
+            mimeType: name.endsWith('.webp') ? 'image/webp' : 'image/jpeg',
+            dimensions: { width: 16, height: 8 },
+          },
         },
       });
       expect(Object.keys(result.output).sort()).toEqual(['media', 'schemaVersion']);
       const inspected = await executeCommand(['inspect', path]);
       if (inspected.exitCode !== 0 || !('analyzers' in inspected.output))
-        throw new Error('Expected JPEG analysis.');
+        throw new Error('Expected image analysis.');
       expect(
         inspected.output.analyzers.filter((analyzer) => analyzer.status === 'UNAVAILABLE'),
       ).toHaveLength(5);

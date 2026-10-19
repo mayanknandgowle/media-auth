@@ -25,6 +25,12 @@ The CLI JPEG probe checks selected marker, frame, and scan framing with a forwar
 
 JPEG coding tables, full progressive scan progression, entropy correctness, restart MCU intervals, metadata payloads, and orientation are not validated. Successful framing inspection is not a promise of decodability or authenticity. Unsupported processes, deferred height, and trailing/concatenated streams are rejected. There is no decoder or additional native/runtime dependency. The extension remains PNG-only.
 
+## WebP scope
+
+The CLI WebP probe reads at most 12 bytes per range request, further split by `maxChunkBytes`. All allocations are fixed-size header buffers; no allocation depends on a declared chunk length or canvas pixel count. Validate known size/limits before access, exact RIFF extent, chunk bounds and zero padding, and chunk count/payload budgets, including unknown and metadata chunks. Pixel limits apply to both extended canvas and image headers. Reconstruction ordering, unique images, selected alpha/header fields, and metadata presence flags are checked.
+
+Compressed color/alpha data and ICCP/EXIF/XMP contents are skipped and unvalidated. Unknown chunks are skipped; metadata stays `NOT_PROBED`. A successful probe does not establish decodability, transparency, or authenticity. The strict subset rejects animation, scaled VP8, duplicate metadata, and trailing files. No new dependency, network access, retention, or extension permission is introduced. See [ADR 0005](adr/0005-static-webp-probe.md).
+
 ## Resource contract
 
 `DEFAULT_LIMITS` specifies `maxBytes`, `maxPixels`, `maxChunkBytes`, and `maxChunks`. Clients validate before reads; probes/hash adapters validate again so direct calls remain bounded. The filesystem and PNG scanner use at most 64 KiB per range read. Browser bytes are held in bounded memory for messaging and WebCrypto, with several temporary representations; the 8 MiB cap is not a promise of an 8 MiB peak memory footprint. Concurrent panel requests are rejected while an operation runs.

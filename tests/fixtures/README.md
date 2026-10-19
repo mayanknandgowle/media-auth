@@ -19,3 +19,17 @@
 | `progressive.jpg` | 166   | `f221219ce29cf87f8933a6f758c344ca94aa5f7524ae74943210b119f7be0b8e` |
 
 Run `npm run fixture:generate` to regenerate all three images. After `npx playwright install chromium`, run `node scripts/verify-jpeg-fixtures.mjs` to independently decode both JPEGs and check every pixel with Chromium. That verifies these fixtures, not the probe's ability to establish general JPEG decodability. JPEG fixtures are for CLI/media tests and are not added to the extension fixture server.
+
+## WebP fixtures
+
+`lossy.webp`, `lossless.webp`, and `alpha.webp` are original generated 16 × 8 gray images, from constant RGBA canvas pixels (128,128,128,255), or alpha 128 for `alpha.webp`. They use the repository's Apache-2.0 license and contain no downloaded media or private information. The alpha fixture includes Chromium's generated color profile; it is not interpreted by the probe.
+
+| File            | Bytes | SHA-256                                                            |
+| --------------- | ----- | ------------------------------------------------------------------ |
+| `lossy.webp`    | 44    | `fc3927eee0346e9c0ac714b66e4d157b7b5e15d1d1825e5f7ee301e9ea1a6d7a` |
+| `lossless.webp` | 38    | `f06216831f617441ac07a9fe1f8d49f91e62526b971eee3c06933b75a3411284` |
+| `alpha.webp`    | 550   | `3fa682dc8d44a3252ace27090c81b2a72e5e67ba64332c0867ea84ea5f25bd38` |
+
+After `npx playwright install chromium`, regenerate explicitly with `node scripts/generate-webp-fixtures.mjs`. The generator uses the pinned Playwright 1.64.0 Chromium 156.0.8078.4 canvas encoder at quality 0.75 (lossy/alpha) and 1 (lossless), strips extended chunks from the two simple fixtures, and asserts the expected encoding. Byte reproducibility was checked on the validated Windows environment; different encoder/platform versions are not promised to produce identical bytes. Tests consume the checked-in bytes and CLI smoke pins their hashes; normal checks never regenerate them.
+
+`node scripts/verify-webp-fixtures.mjs` independently decodes all three with Chromium, checks dimensions, exact alpha, exact lossless gray, and lossy gray within two levels. This validates the fixtures, not general decodability from the probe. No WebP is added to the extension fixture server. Malformed variants and placeholder metadata for structure tests are constructed in memory and are not labeled decodable images.
