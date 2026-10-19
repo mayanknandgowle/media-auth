@@ -31,9 +31,23 @@ The CLI WebP probe reads at most 12 bytes per range request, further split by `m
 
 Compressed color/alpha data and ICCP/EXIF/XMP contents are skipped and unvalidated. Unknown chunks are skipped; metadata stays `NOT_PROBED`. A successful probe does not establish decodability, transparency, or authenticity. The strict subset rejects animation, scaled VP8, duplicate metadata, and trailing files. No new dependency, network access, retention, or extension permission is introduced. See [ADR 0005](adr/0005-static-webp-probe.md).
 
+## GIF scope
+
+The CLI GIF probe reads only fixed headers of at most 13 bytes, further split by `maxChunkBytes`. Palettes, compressed image data, and comment/application contents are skipped after extent checks. No allocation scales with dimensions or declared payload sizes. The logical-screen pixel cap also bounds its contained image. Reject multiple images, unsupported rendering/control/extension types, invalid palette indices and reserved fields, missing active palettes, and nonexact trailers.
+
+Count every top-level block, palette, fixed extension sub-block, and data sub-block including zero terminators; the header/logical-screen pair counts as one. Per-payload and aggregate sub-block-chain byte limits prevent splitting a large payload from bypassing its budget. Tiny empty comments still consume count budget. See [ADR 0006](adr/0006-single-image-gif-probe.md) for exact accounting and deliberate compatibility restrictions.
+
+LZW codes, palette colors, metadata, timing/looping, disposal rendering, and transparency are unvalidated; structurally accepted data can be undecodable. No decompression is attempted and no authenticity inference is made. The probe requires a trustworthy exact-range adapter and cannot impose a hard timeout on arbitrary adapter code. The existing local-file adapter checks identity/changes and closes its handle. No permissions, remote requests, or dependencies are added.
+
+## BMP scope
+
+The CLI BMP probe accepts only the 40-byte info header and 24-bit BI_RGB data without color-table declarations. Read fixed headers only, at most 40 bytes per allocation/request and further split by `maxChunkBytes`. Require a matching file size, zero reserved fields, valid signed dimensions/plane count, bounded pixel offset, exact padded-row extent, and consistent optional image-size declaration. Reject unsupported headers, depths, compression, palettes, and trailing bytes.
+
+Use division before multiplying padded stride by absolute height; do not use bitwise stride calculations that wrap large widths. Count file header, DIB header, pixel array, and optional gap; bound array/gap payload sizes even though they are skipped. No pixels, padding, gap content, or resolution metadata are interpreted, and no decodability/authenticity inference follows. See [ADR 0007](adr/0007-24-bit-bmp-probe.md) for the strict subset.
+
 ## Resource contract
 
-`DEFAULT_LIMITS` specifies `maxBytes`, `maxPixels`, `maxChunkBytes`, and `maxChunks`. Clients validate before reads; probes/hash adapters validate again so direct calls remain bounded. The filesystem and PNG scanner use at most 64 KiB per range read. Browser bytes are held in bounded memory for messaging and WebCrypto, with several temporary representations; the 8 MiB cap is not a promise of an 8 MiB peak memory footprint. Concurrent panel requests are rejected while an operation runs.
+`DEFAULT_LIMITS` specifies `maxBytes`, `maxPixels`, `maxChunkBytes`, and `maxChunks`. Clients validate before reads; probes/hash adapters validate again so direct calls remain bounded. The filesystem and all probes cap range requests at the smaller of 64 KiB and maxChunkBytes. PNG includes fixed-header and CRC reads in that cap; payload budgets remain separate. Browser bytes are held in bounded memory for messaging and WebCrypto, with several temporary representations; the 8 MiB cap is not a promise of an 8 MiB peak memory footprint. Concurrent panel requests are rejected while an operation runs.
 
 Cancellation in core is cooperative. A promise timeout cannot stop an in-process analyzer, and no hard timeout is claimed. Untrusted third-party analyzers must not be loaded until an isolation protocol and enforcement mechanism exist. Remote opt-in is a capability gate for trusted adapters, not a network sandbox.
 
@@ -42,3 +56,5 @@ Cancellation in core is cooperative. A promise timeout cannot stop an in-process
 Tests cover malformed/truncated/CRC-invalid PNGs, malformed/truncated JPEG frame and scan headers, stuffing/restart errors, JPEG marker/entropy budgets and range-adapter contracts, oversized dimensions/bytes/chunks, undersupplied/oversupplied streams, hash vectors, failed/invalid analyzers, duplicate registry/evidence IDs, remote opt-in, cancellation, unsafe URLs, invalid senders/messages, stale selections, and acquisition timeouts. Browser smoke and manual host UI checks have distinct scopes; see [VALIDATION.md](VALIDATION.md).
 
 Before adding a format, provider, remote service, or permission: identify new trust boundaries, add adversarial fixtures, define budgets, update documentation, and record any major decision. Do not add a user-supplied URL fetch API.
+
+The [cross-format corpus](PROBE_CORPUS.md) runs named errors, deterministic truncations/byte mutations, and concatenations with a guarded adapter. It detects out-of-range or over-budget requests and unexpected exceptions; explicit PNG CRC-boundary and CLI read-limit regressions cover demonstrated fixes. Its finite read ceiling is test-side instrumentation, not a production timeout or exhaustive security audit.

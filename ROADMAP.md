@@ -27,3 +27,9 @@ The first Phase 1 increment adds bounded 8-bit baseline/progressive JPEG probing
 The second Phase 1 increment adds selected static WebP RIFF/VP8/VP8L/VP8X probing to the CLI, with original fixtures, independent decode checks, and adversarial header/budget tests; see [ADR 0005](docs/adr/0005-static-webp-probe.md). Phase 1 remains incomplete: broader containers, sustained fuzzing, and more extensive adversarial corpora are future work. The extension remains PNG-only.
 
 Exact identity and minimal discovery already exist in Phase 0; their later phases refer to broader capabilities. No passive surveillance, face recognition, watermark cracking, or arbitrary URL-fetch service is planned as part of this foundation. See [research boundaries](docs/RESEARCH.md) for evaluation requirements.
+
+The third Phase 1 increment adds bounded single-image GIF87a/GIF89a probing and logical-screen dimensions to the CLI, with original independently decoded fixtures and adversarial block/budget tests; see [ADR 0006](docs/adr/0006-single-image-gif-probe.md). Animation, pixel decoding, and extension GIF acquisition are deferred. This increment does not complete Phase 1 or begin metadata intelligence.
+
+The fourth Phase 1 increment adds a [reproducible cross-format adversarial corpus](docs/PROBE_CORPUS.md) and fixes demonstrated PNG/CLI read-budget gaps. It advances parser-budget evidence across all four formats. The finite mutation suite does not complete the broader format/corpus work or replace sustained fuzzing; metadata intelligence remains a separate phase.
+
+The fifth Phase 1 increment adds bounded uncompressed 24-bit BI_RGB BMP probing and CLI inspection, with top-down/bottom-up fixtures, independent pixel checks, and expanded mutation coverage; see [ADR 0007](docs/adr/0007-24-bit-bmp-probe.md). Other BMP variants, decoding, and metadata interpretation remain deferred. Phase 1 remains incomplete; this does not start Phase 2.

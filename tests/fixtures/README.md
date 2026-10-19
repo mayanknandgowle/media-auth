@@ -1,5 +1,7 @@
 # Deterministic fixtures
 
+The ten fixtures below also seed the [cross-format adversarial corpus](../../docs/PROBE_CORPUS.md). Original recipes and deterministic mutations are generated in memory during tests; their acceptance is a partial-parser result, not a decodability or authenticity label. Run `npm run test:corpus` for the focused suite.
+
 `known.png` is an original, generated 1 × 1 RGBA PNG with a blue pixel and a `Software` text chunk. `scripts/generate-fixture.mjs` is its source; `npm run fixture:generate` regenerates it with the pinned Node baseline. No downloaded media is used.
 
 - Length: 122 bytes.
@@ -33,3 +35,25 @@ Run `npm run fixture:generate` to regenerate all three images. After `npx playwr
 After `npx playwright install chromium`, regenerate explicitly with `node scripts/generate-webp-fixtures.mjs`. The generator uses the pinned Playwright 1.64.0 Chromium 156.0.8078.4 canvas encoder at quality 0.75 (lossy/alpha) and 1 (lossless), strips extended chunks from the two simple fixtures, and asserts the expected encoding. Byte reproducibility was checked on the validated Windows environment; different encoder/platform versions are not promised to produce identical bytes. Tests consume the checked-in bytes and CLI smoke pins their hashes; normal checks never regenerate them.
 
 `node scripts/verify-webp-fixtures.mjs` independently decodes all three with Chromium, checks dimensions, exact alpha, exact lossless gray, and lossy gray within two levels. This validates the fixtures, not general decodability from the probe. No WebP is added to the extension fixture server. Malformed variants and placeholder metadata for structure tests are constructed in memory and are not labeled decodable images.
+
+## GIF fixtures
+
+`single87.gif` and `transparent-interlaced.gif` are original deterministic 16 × 8 checkerboards. Their two-entry palette contains gray (128,128,128) and blue (0,96,255). GIF87a uses a global palette and ordinary row order. GIF89a uses a local palette, interlaced row order, an original fixture comment, and transparency for the blue entries. Both use LZW minimum code size 2, a clear code before every literal, an end code, and payload sub-blocks of at most 17 bytes. This deliberately simple generator is not a general compressor. Fixtures and generator use the repository's Apache-2.0 license; see [GIF format acknowledgement](../../THIRD_PARTY_NOTICES.md).
+
+| File                         | Bytes | SHA-256                                                            |
+| ---------------------------- | ----- | ------------------------------------------------------------------ |
+| `single87.gif`               | 135   | `53bec4343a894b85430d2c4e31e221ea2ed0a46ee79bf1a0c0178b6290079bd7` |
+| `transparent-interlaced.gif` | 173   | `440c19877aafda5bcc89dd22a7cd1e7a505047845cc15ad8cefa2cabbedcba47` |
+
+Run `node scripts/generate-gif-fixtures.mjs` explicitly to regenerate both; it uses Node byte operations without a browser encoder or downloaded media. Normal checks use the checked-in files and CLI smoke pins their hashes. After `npx playwright install chromium`, `node scripts/verify-gif-fixtures.mjs` independently decodes both with Chromium, checking dimensions and all RGBA pixels, including interlaced row placement and transparent pixels. This verifies these fixtures, not the probe's general decodability. GIF is not added to the extension fixture server. Structural test mutations are not asserted to be decodable images.
+
+## BMP fixtures
+
+`rgb24-bottom-up.bmp` and `rgb24-top-down.bmp` are original deterministic 3 × 2 RGB gradients in 24-bit BI_RGB files with 40-byte info headers. Pixels use BGR storage and three nonzero padding bytes per row. The first fixture stores rows bottom-up with an explicit image-size declaration; the second stores rows top-down with a zero image-size declaration. Both decode to the same RGB gradient: R = 40 + 60x, G = 30 + 90y, B = 200 - 40x. They contain no downloaded media or private information and use the repository's Apache-2.0 license.
+
+| File                  | Bytes | SHA-256                                                            |
+| --------------------- | ----- | ------------------------------------------------------------------ |
+| `rgb24-bottom-up.bmp` | 78    | `d2ac58154b7f4dc8d4c11f341c496bfb9196bcc26008a27d9bb355e6b7ca557e` |
+| `rgb24-top-down.bmp`  | 78    | `ded661978ff5d07c46a90105f5a70403d3522eec427b9bcdebefba0f116e4df2` |
+
+Run `node scripts/generate-bmp-fixtures.mjs` explicitly to regenerate both with Node byte operations. Normal checks consume checked-in bytes and CLI smoke pins their hashes. After `npx playwright install chromium`, `node scripts/verify-bmp-fixtures.mjs` independently decodes both and checks every RGBA pixel, including row order and padding. This validates these fixtures, not general BMP decodability from the probe. BMP is not added to the extension fixture server.

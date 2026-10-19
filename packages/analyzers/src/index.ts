@@ -13,19 +13,21 @@ import type { ExactHasher, MetadataAdapter, MetadataReadResult } from './contrac
 export type * from './contracts.js';
 
 const VERSION = '0.1.0';
-const metadataIdentity: EvidenceSource = { id: 'media-auth.container-metadata', version: '0.3.0' };
+const metadataIdentity: EvidenceSource = { id: 'media-auth.container-metadata', version: '0.5.0' };
 
 /** Recorded encoded dimensions from supported container probes; no metadata payload parsing. */
 export const containerMetadataAdapter: MetadataAdapter = {
   identity: metadataIdentity,
   async read(media: Media): Promise<MetadataReadResult> {
     if (
-      !['image/png', 'image/jpeg', 'image/webp'].includes(media.descriptor.mimeType) ||
+      !['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/bmp'].includes(
+        media.descriptor.mimeType,
+      ) ||
       !media.descriptor.dimensions
     )
       return {
         status: 'UNAVAILABLE',
-        reason: 'Only PNG, JPEG, and WebP container dimensions are recorded.',
+        reason: 'Only PNG, JPEG, WebP, GIF, and BMP container dimensions are recorded.',
       };
     return {
       status: 'DETECTED',
@@ -47,6 +49,9 @@ export const containerMetadataAdapter: MetadataAdapter = {
         'Container observations do not establish capture device, creator, editing history, or authenticity.',
         'EXIF, XMP, IPTC, and ICC payload parsing is not implemented.',
         'Dimensions are encoded dimensions; metadata orientation is not applied.',
+        ...(media.descriptor.mimeType === 'image/gif'
+          ? ['GIF dimensions describe its logical screen; pixel aspect ratio is not applied.']
+          : []),
       ],
     };
   },
@@ -62,7 +67,7 @@ const metadataAnalyzer: Analyzer = {
     if (result.status !== 'DETECTED')
       return unavailableResult(
         metadataAnalyzer,
-        'Only PNG, JPEG, and WebP container dimensions are recorded.',
+        'Only PNG, JPEG, WebP, GIF, and BMP container dimensions are recorded.',
       );
     return {
       schemaVersion: '1.0',

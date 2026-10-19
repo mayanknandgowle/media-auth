@@ -19,6 +19,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "test:corpus": "vitest run tests/probe-corpus.test.ts",
     "build": "node scripts/build.mjs",
     "build:extension": "node scripts/build.mjs extension",
     "fixture:generate": "node scripts/generate-fixture.mjs",

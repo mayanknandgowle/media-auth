@@ -16,12 +16,23 @@ function invalid(message: string): never {
   throw new MediaAuthError('INVALID_INPUT', message);
 }
 
-async function read(handle: MediaHandle, offset: number, length: number): Promise<Uint8Array> {
+async function read(
+  handle: MediaHandle,
+  offset: number,
+  length: number,
+  limits: ResourceLimits,
+): Promise<Uint8Array> {
   if (typeof handle.read !== 'function')
     throw new MediaAuthError('UNSUPPORTED_MEDIA', 'The PNG probe requires byte-range access.');
   if (offset > handle.sizeBytes - length) invalid('PNG data is truncated.');
-  const bytes = await handle.read(offset, length);
-  if (bytes.byteLength !== length) invalid('Media adapter returned an incomplete byte range.');
+  const bytes = new Uint8Array(length);
+  const step = Math.min(READ_BYTES, limits.maxChunkBytes);
+  for (let consumed = 0; consumed < length; consumed += step) {
+    const count = Math.min(step, length - consumed);
+    const part = await handle.read(offset + consumed, count);
+    if (part.byteLength !== count) invalid('Media adapter returned an incorrect byte range.');
+    bytes.set(part, consumed);
+  }
   return bytes;
 }
 
@@ -39,15 +50,21 @@ function crcUpdate(crc: number, bytes: Uint8Array): number {
   return crc;
 }
 
-async function verifyChecksum(handle: MediaHandle, offset: number, length: number): Promise<void> {
+async function verifyChecksum(
+  handle: MediaHandle,
+  offset: number,
+  length: number,
+  limits: ResourceLimits,
+): Promise<void> {
   let crc = 0xffffffff;
-  for (let consumed = 0; consumed < length; consumed += READ_BYTES) {
+  const step = Math.min(READ_BYTES, limits.maxChunkBytes);
+  for (let consumed = 0; consumed < length; consumed += step) {
     crc = crcUpdate(
       crc,
-      await read(handle, offset + consumed, Math.min(READ_BYTES, length - consumed)),
+      await read(handle, offset + consumed, Math.min(step, length - consumed), limits),
     );
   }
-  const expected = uint32(await read(handle, offset + length, 4));
+  const expected = uint32(await read(handle, offset + length, 4, limits));
   if ((crc ^ 0xffffffff) >>> 0 !== expected) invalid('PNG chunk checksum does not match.');
 }
 
@@ -92,7 +109,7 @@ export const pngProbe: MediaProbe = {
     validateSize(handle.sizeBytes, limits);
     if (handle.sizeBytes < SIGNATURE.length)
       throw new MediaAuthError('UNSUPPORTED_MEDIA', 'Input is not a supported PNG.');
-    const signature = await read(handle, 0, SIGNATURE.length);
+    const signature = await read(handle, 0, SIGNATURE.length, limits);
     if (!SIGNATURE.every((byte, index) => signature[index] === byte))
       throw new MediaAuthError(
         'UNSUPPORTED_MEDIA',
@@ -109,7 +126,7 @@ export const pngProbe: MediaProbe = {
     while (offset < handle.sizeBytes) {
       if (++chunks > limits.maxChunks)
         throw new MediaAuthError('RESOURCE_LIMIT', 'PNG exceeds the chunk count limit.');
-      const chunkHeader = await read(handle, offset, 8);
+      const chunkHeader = await read(handle, offset, 8, limits);
       const length = uint32(chunkHeader);
       if (length > 0x7fffffff) invalid('PNG chunk length is invalid.');
       if (length > limits.maxChunkBytes)
@@ -125,7 +142,7 @@ export const pngProbe: MediaProbe = {
         );
       if (type === 'IHDR') {
         if (header || length !== 13) invalid('PNG requires exactly one 13-byte IHDR.');
-        header = parseHeader(await read(handle, offset + 8, length), limits);
+        header = parseHeader(await read(handle, offset + 8, length, limits), limits);
       } else if (type === 'PLTE') {
         if (
           !header ||
@@ -156,7 +173,7 @@ export const pngProbe: MediaProbe = {
         );
       }
       if (imageData && type !== 'IDAT') imageDataEnded = true;
-      await verifyChecksum(handle, offset + 4, length + 4);
+      await verifyChecksum(handle, offset + 4, length + 4, limits);
       offset += length + 12;
     }
     if (!header || !ended) invalid('PNG is missing its header or ending.');

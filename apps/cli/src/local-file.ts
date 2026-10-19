@@ -81,10 +81,10 @@ export async function openLocalFile(path: string, limits: ResourceLimits): Promi
       ) {
         throw new MediaAuthError('INVALID_INPUT', 'Requested file range is out of bounds.');
       }
-      if (length > READ_CHUNK_BYTES) {
+      if (length > chunkBytes) {
         throw new MediaAuthError(
           'RESOURCE_LIMIT',
-          'Requested file range exceeds the 64 KiB read limit.',
+          'Requested file range exceeds the configured read limit.',
         );
       }
       await assertUnchanged();

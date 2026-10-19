@@ -19,9 +19,31 @@ afterEach(async () => {
 });
 
 describe('CLI commands', () => {
-  it.each(['baseline.jpg', 'progressive.jpg', 'lossy.webp', 'lossless.webp', 'alpha.webp'])(
+  it('probes PNG with a tight payload/read budget and rejects smaller payload budgets', async () => {
+    // The largest fixture chunk is 40 bytes; CRC scanning also covers its four-byte type.
+    expect(
+      await executeCommand(['probe', fixturePath], { ...DEFAULT_LIMITS, maxChunkBytes: 40 }),
+    ).toMatchObject({
+      exitCode: 0,
+      output: { media: { mimeType: 'image/png', dimensions: { width: 1, height: 1 } } },
+    });
+    expect(
+      await executeCommand(['probe', fixturePath], { ...DEFAULT_LIMITS, maxChunkBytes: 39 }),
+    ).toMatchObject({ exitCode: 1, output: { error: { code: 'RESOURCE_LIMIT' } } });
+  });
+  it.each([
+    ['baseline.jpg', 'image/jpeg', 16, 8],
+    ['progressive.jpg', 'image/jpeg', 16, 8],
+    ['lossy.webp', 'image/webp', 16, 8],
+    ['lossless.webp', 'image/webp', 16, 8],
+    ['alpha.webp', 'image/webp', 16, 8],
+    ['single87.gif', 'image/gif', 16, 8],
+    ['transparent-interlaced.gif', 'image/gif', 16, 8],
+    ['rgb24-bottom-up.bmp', 'image/bmp', 3, 2],
+    ['rgb24-top-down.bmp', 'image/bmp', 3, 2],
+  ] as const)(
     'probes and inspects %s without stronger authenticity claims',
-    async (name) => {
+    async (name, mimeType, width, height) => {
       const bytes = await readFile(new URL(`../../../tests/fixtures/${name}`, import.meta.url));
       const path = join(temporaryDirectory, 'misleading.png');
       await writeFile(path, bytes);
@@ -31,8 +53,8 @@ describe('CLI commands', () => {
         output: {
           schemaVersion: '1.0',
           media: {
-            mimeType: name.endsWith('.webp') ? 'image/webp' : 'image/jpeg',
-            dimensions: { width: 16, height: 8 },
+            mimeType,
+            dimensions: { width, height },
           },
         },
       });
@@ -44,6 +66,16 @@ describe('CLI commands', () => {
         inspected.output.analyzers.filter((analyzer) => analyzer.status === 'UNAVAILABLE'),
       ).toHaveLength(5);
       expect(inspected.output.conclusion.verdict).toBe('INCONCLUSIVE');
+      expect(inspected.output.evidence.find((item) => item.category === 'METADATA')).toMatchObject({
+        source: { id: 'media-auth.container-metadata', version: '0.5.0' },
+        details: {
+          kind: 'RECORDED',
+          observations: [
+            { kind: 'RECORDED', format: 'CONTAINER', field: 'width', value: width },
+            { kind: 'RECORDED', format: 'CONTAINER', field: 'height', value: height },
+          ],
+        },
+      });
       expect(inspected.output.evidence).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ category: 'METADATA', status: 'DETECTED' }),
@@ -78,6 +110,25 @@ describe('CLI commands', () => {
     expect(['UNKNOWN', 'INCONCLUSIVE']).toContain(result.output.conclusion.verdict);
     expect(result.output.conclusion.origin).toBe('UNKNOWN');
     expect(JSON.parse(JSON.stringify(result.output))).toEqual(result.output);
+  });
+
+  it('returns structured GIF unsupported/budget errors without partial analysis', async () => {
+    const bytes = await readFile(new URL('../../../tests/fixtures/single87.gif', import.meta.url));
+    const path = join(temporaryDirectory, 'input.gif');
+    const multiple = Buffer.concat([bytes.subarray(0, -1), bytes.subarray(19)]);
+    await writeFile(path, multiple);
+    for (const command of ['probe', 'inspect']) {
+      const result = await executeCommand([command, path]);
+      expect(result).toMatchObject({
+        exitCode: 1,
+        output: { error: { code: 'UNSUPPORTED_MEDIA' } },
+      });
+      expect(Object.keys(result.output).sort()).toEqual(['error', 'schemaVersion']);
+    }
+    await writeFile(path, bytes);
+    expect(
+      await executeCommand(['probe', path], { ...DEFAULT_LIMITS, maxPixels: 127 }),
+    ).toMatchObject({ exitCode: 1, output: { error: { code: 'RESOURCE_LIMIT' } } });
   });
 
   it('is deterministic for the same file', async () => {
@@ -154,6 +205,15 @@ describe('CLI commands', () => {
 });
 
 describe('bounded local media handle', () => {
+  it('enforces a caller-supplied range-read limit before allocating or reading', async () => {
+    const input = await openLocalFile(fixturePath, { ...DEFAULT_LIMITS, maxChunkBytes: 4 });
+    try {
+      expect(await input.handle.read(0, 4)).toEqual(new Uint8Array([137, 80, 78, 71]));
+      await expect(input.handle.read(0, 5)).rejects.toMatchObject({ code: 'RESOURCE_LIMIT' });
+    } finally {
+      await input.close();
+    }
+  });
   it('reads exact ranges and streams bounded chunks', async () => {
     const path = join(temporaryDirectory, 'bytes.bin');
     const bytes = new Uint8Array(70 * 1024).fill(42);

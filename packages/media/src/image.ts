@@ -3,6 +3,8 @@ import { validateSize } from './limits.js';
 import { pngProbe } from './png.js';
 import { jpegProbe } from './jpeg.js';
 import { webpProbe } from './webp.js';
+import { gifProbe } from './gif.js';
+import { bmpProbe } from './bmp.js';
 
 /** Explicit byte-signature dispatch; filenames and claimed MIME types are not evidence. */
 export const imageProbe: MediaProbe = {
@@ -20,6 +22,9 @@ export const imageProbe: MediaProbe = {
       bytes.set(part, offset);
     }
     if (bytes[0] === 0xff && bytes[1] === 0xd8) return jpegProbe.probe(handle, source, limits);
+    if (bytes[0] === 0x42 && bytes[1] === 0x4d) return bmpProbe.probe(handle, source, limits);
+    if (['GIF87a', 'GIF89a'].includes(String.fromCharCode(...bytes.subarray(0, 6))))
+      return gifProbe.probe(handle, source, limits);
     if ([137, 80, 78, 71, 13, 10, 26, 10].every((byte, index) => bytes[index] === byte))
       return pngProbe.probe(handle, source, limits);
     if (
@@ -29,7 +34,7 @@ export const imageProbe: MediaProbe = {
       return webpProbe.probe(handle, source, limits);
     throw new MediaAuthError(
       'UNSUPPORTED_MEDIA',
-      'Only static PNG, static WebP, and 8-bit baseline/progressive JPEG are supported.',
+      'Only static PNG/WebP, single-image GIF, 24-bit BI_RGB BMP, and 8-bit baseline/progressive JPEG are supported.',
     );
   },
 };
