@@ -33,6 +33,17 @@ Run `npm run fixture:generate` to regenerate all three images. After `npx playwr
 
 Regenerate explicitly with `node scripts/generate-exif-fixtures.mjs`; ordinary checks consume pinned bytes. `node scripts/verify-jpeg-fixtures.mjs` decodes all four JPEGs with Chromium and checks every gray pixel. Chromium applies orientation 6 (8 × 16 display); the MediaAuth report retains encoded 16 × 8 and records orientation separately. This validates fixtures, not general EXIF/JPEG conformance. The loopback server adds only the two fixed `/metadata/*.jpg` routes; browser tests explicitly insert these controlled images into the test page.
 
+## Recorded PNG eXIf
+
+`metadata/exif-little.png` and `metadata/exif-big.png` are original generated 16 × 8 RGBA PNGs with gray 128 and alpha 255. Their single pre-IDAT eXIf contains the synthetic nine fields described above as raw classic TIFF; no JPEG prefix or real device data. They use Apache-2.0 and are separate from the ten probe seeds.
+
+| File                       | Bytes | SHA-256                                                            |
+| -------------------------- | ----- | ------------------------------------------------------------------ |
+| `metadata/exif-little.png` | 360   | `0d640af34e012a426237fd91ffdb589fa8dd395f0f19f44b1cb109e8f9d16dbf` |
+| `metadata/exif-big.png`    | 360   | `d97eb34cf3b475abade086f9890f5fff1773681cfca17bd451754d05f98ecaa8` |
+
+Generate explicitly with `node scripts/generate-png-exif-fixtures.mjs` using Node deflate/CRC32 and the original JPEG TIFF fixtures. Tests use pinned bytes. `node scripts/verify-png-fixtures.mjs` checks every decoded pixel for known.png and both metadata PNGs; it allows the encoded view or orientation-6 rotated view. Pinned Chromium 156.0.8078.4 renders the little-endian fixture at 8 × 16; MediaAuth keeps encoded 16 × 8. Supplemental Pillow independently verifies all recorded values and encoded RGBA pixels. Fixed `/metadata/*.png` routes support explicit browser tests.
+
 ## WebP fixtures
 
 ### Recorded WebP EXIF

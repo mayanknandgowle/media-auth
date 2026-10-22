@@ -9,11 +9,11 @@ export interface ExifReader {
 }
 type Unreadable = Extract<MetadataReadResult, { status: 'UNAVAILABLE' | 'INCONCLUSIVE' }>;
 
-/** Common direct-call boundary for the two implemented EXIF carriers. */
+/** Common direct-call boundary for implemented EXIF carriers. */
 export function openExifReader(
   media: Media,
   context: AnalysisContext,
-  mimeType: 'image/jpeg' | 'image/webp',
+  mimeType: 'image/jpeg' | 'image/webp' | 'image/png',
   label: string,
 ): ExifReader | Unreadable {
   validateLimits(context.limits);

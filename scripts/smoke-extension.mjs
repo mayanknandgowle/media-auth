@@ -79,6 +79,8 @@ try {
     ['metadata/exif-big.jpg', 'image/jpeg'],
     ['metadata/exif-little.webp', 'image/webp'],
     ['metadata/exif-big.webp', 'image/webp'],
+    ['metadata/exif-little.png', 'image/png'],
+    ['metadata/exif-big.png', 'image/png'],
     ['lossy.webp', 'image/webp'],
     ['lossless.webp', 'image/webp'],
     ['alpha.webp', 'image/webp'],
@@ -90,26 +92,33 @@ try {
     await localPanel.locator('#file').setInputFiles(resolve('tests/fixtures', name));
     await expect(localPanel.locator('#facts')).toContainText(name.split('/').at(-1));
     await expect(localPanel.locator('#status')).toContainText('Local analysis complete');
-    await expect(localPanel.locator('#evidence .evidence-card')).toHaveCount(9);
+    await expect(localPanel.locator('#evidence .evidence-card')).toHaveCount(10);
     const local = JSON.parse(await localPanel.locator('#result').textContent());
     assert.equal(local.media.mimeType, mime);
     assert.equal(local.media.source.acquisition, 'LOCAL_FILE');
     assert.equal(local.conclusion.verdict, 'INCONCLUSIVE');
     const exif = local.evidence.find(
-      (item) => item.source.id === `media-auth.${mime === 'image/webp' ? 'webp' : 'jpeg'}-exif`,
+      (item) =>
+        item.source.id ===
+        `media-auth.${mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpeg'}-exif`,
     );
     assert.equal(
       exif.status,
       name.startsWith('metadata/')
         ? 'DETECTED'
-        : mime === 'image/jpeg' || mime === 'image/webp'
+        : ['image/png', 'image/jpeg', 'image/webp'].includes(mime)
           ? 'NOT_DETECTED'
           : 'UNAVAILABLE',
     );
     if (name.startsWith('metadata/')) {
       const card = localPanel.locator('.evidence-card').filter({
         has: localPanel.getByRole('heading', {
-          name: mime === 'image/webp' ? 'WebP EXIF fields' : 'JPEG EXIF fields',
+          name:
+            mime === 'image/png'
+              ? 'PNG EXIF fields'
+              : mime === 'image/webp'
+                ? 'WebP EXIF fields'
+                : 'JPEG EXIF fields',
           exact: true,
         }),
       });
@@ -121,7 +130,7 @@ try {
     }
   }
   assert.equal(allImageRequests, beforeLocal, 'Local inspection must not fetch page/media URLs.');
-  await localPanel.locator('#file').setInputFiles('tests/fixtures/metadata/exif-little.webp');
+  await localPanel.locator('#file').setInputFiles('tests/fixtures/metadata/exif-little.png');
   await expect(localPanel.locator('#status')).toContainText('Local analysis complete');
   const downloadPromise = localPanel.waitForEvent('download');
   await localPanel.locator('#export').click();
@@ -158,7 +167,7 @@ try {
     buffer: Buffer.alloc(8 * 1024 * 1024 + 1),
   });
   await expect(localPanel.locator('#status')).toContainText('8 MiB');
-  await localPanel.locator('#file').setInputFiles('tests/fixtures/metadata/exif-little.webp');
+  await localPanel.locator('#file').setInputFiles('tests/fixtures/metadata/exif-little.png');
   await expect(localPanel.locator('#status')).toContainText('Local analysis complete');
   await mkdir('test-results', { recursive: true });
   await localPanel.setViewportSize({ width: 320, height: 900 });
@@ -177,7 +186,7 @@ try {
   });
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: production MV3 loads, page access requires a grant, fourteen fixtures inspect locally without activeTab, recorded EXIF stays text, JSON download/clear/errors and narrow layouts work.',
+    'PASS: production MV3 loads, page access requires a grant, sixteen fixtures inspect locally without activeTab, recorded EXIF stays text, JSON download/clear/errors and narrow layouts work.',
   );
   await production.context.close();
 
@@ -267,10 +276,17 @@ try {
     assert.equal(pageReport.media.source.acquisition, 'ORIGINAL_WEB_ASSET');
     assert.equal(allImageRequests, count + 1, 'Each selection must acquire exactly one asset.');
   }
-  // Controlled same-origin DOM supplies four fixed metadata fixture routes.
+  // Controlled same-origin DOM supplies six fixed metadata fixture routes.
   await fixture.evaluate(async () => {
     document.body.replaceChildren();
-    for (const name of ['exif-little.jpg', 'exif-big.jpg', 'exif-little.webp', 'exif-big.webp']) {
+    for (const name of [
+      'exif-little.jpg',
+      'exif-big.jpg',
+      'exif-little.webp',
+      'exif-big.webp',
+      'exif-little.png',
+      'exif-big.png',
+    ]) {
       const image = document.createElement('img');
       image.alt = name;
       image.src = `/metadata/${name}`;
@@ -280,9 +296,16 @@ try {
   });
   const beforeMetadata = allImageRequests;
   await panel.locator('#discover').evaluate((button) => button.click());
-  await expect(panel.locator('#status')).toContainText('4 image(s) discovered');
+  await expect(panel.locator('#status')).toContainText('6 image(s) discovered');
   assert.equal(allImageRequests, beforeMetadata);
-  for (const name of ['exif-little.jpg', 'exif-big.jpg', 'exif-little.webp', 'exif-big.webp']) {
+  for (const name of [
+    'exif-little.jpg',
+    'exif-big.jpg',
+    'exif-little.webp',
+    'exif-big.webp',
+    'exif-little.png',
+    'exif-big.png',
+  ]) {
     const before = allImageRequests;
     await panel
       .getByRole('button', { name: `Analyze ${name}`, exact: true })
@@ -292,7 +315,9 @@ try {
     assert.equal(metadata.media.source.acquisition, 'ORIGINAL_WEB_ASSET');
     assert.equal(
       metadata.evidence.find(
-        (item) => item.source.id === `media-auth.${name.endsWith('.webp') ? 'webp' : 'jpeg'}-exif`,
+        (item) =>
+          item.source.id ===
+          `media-auth.${name.endsWith('.png') ? 'png' : name.endsWith('.webp') ? 'webp' : 'jpeg'}-exif`,
       ).status,
       'DETECTED',
     );
@@ -303,7 +328,7 @@ try {
   await expect(panel.locator('#status')).toContainText('Session cleared');
   assert.equal(await panel.locator('#candidates button').count(), 0);
   console.log(
-    'PASS: production panel/worker discover and inspect ten probe and four EXIF page fixtures with a disposable loopback grant; only selected assets are acquired, stale selections are rejected, and clear forgets candidates.',
+    'PASS: production panel/worker discover and inspect ten probe and six EXIF page fixtures with a disposable loopback grant; only selected assets are acquired, stale selections are rejected, and clear forgets candidates.',
   );
   console.log(
     'NOT VERIFIED: native toolbar activation, the real activeTab grant, and native Side Panel hosting. Complete the manual procedure in apps/extension/README.md.',

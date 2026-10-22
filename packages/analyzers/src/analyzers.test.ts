@@ -135,7 +135,11 @@ describe('foundation composition', () => {
         status: 'UNAVAILABLE',
       });
       expect(result.conclusion.verdict).toBe('INCONCLUSIVE');
-      expect(result.evidence.some((item) => item.status === 'NOT_DETECTED')).toBe(false);
+      expect(
+        result.evidence
+          .filter((item) => item.status === 'NOT_DETECTED')
+          .map((item) => item.source.id),
+      ).toEqual('handle' in media ? ['media-auth.png-exif'] : []);
     }
   });
 
@@ -175,6 +179,8 @@ describe('foundation composition', () => {
     );
     expect(deferred).toHaveLength(5);
     expect(deferred.every((item) => item.status === 'UNAVAILABLE')).toBe(true);
-    expect(first.evidence.some((item) => item.status === 'NOT_DETECTED')).toBe(false);
+    expect(
+      first.evidence.filter((item) => item.status === 'NOT_DETECTED').map((item) => item.source.id),
+    ).toEqual(['media-auth.png-exif']);
   });
 });

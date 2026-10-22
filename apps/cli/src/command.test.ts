@@ -2,6 +2,7 @@ import { mkdtemp, readFile, rm, truncate, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { crc32 } from 'node:zlib';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DEFAULT_LIMITS } from '@media-auth/core';
 import { executeCommand } from './command.js';
@@ -64,7 +65,7 @@ describe('CLI commands', () => {
         throw new Error('Expected image analysis.');
       expect(
         inspected.output.analyzers.filter((analyzer) => analyzer.status === 'UNAVAILABLE'),
-      ).toHaveLength(['image/jpeg', 'image/webp'].includes(mimeType) ? 6 : 7);
+      ).toHaveLength(['image/png', 'image/jpeg', 'image/webp'].includes(mimeType) ? 7 : 8);
       expect(inspected.output.conclusion.verdict).toBe('INCONCLUSIVE');
       expect(inspected.output.evidence.find((item) => item.category === 'METADATA')).toMatchObject({
         source: { id: 'media-auth.container-metadata', version: '0.5.0' },
@@ -90,63 +91,68 @@ describe('CLI commands', () => {
     },
   );
 
-  it.each(['exif-little.jpg', 'exif-big.jpg', 'exif-little.webp', 'exif-big.webp'])(
-    'keeps %s probe-only output separate from recorded EXIF inspection',
-    async (name) => {
-      const path = fileURLToPath(
-        new URL(`../../../tests/fixtures/metadata/${name}`, import.meta.url),
-      );
-      const probed = await executeCommand(['probe', path]);
-      expect(Object.keys(probed.output).sort()).toEqual(['media', 'schemaVersion']);
-      expect(probed).toMatchObject({
-        exitCode: 0,
-        output: {
-          media: {
-            dimensions: { width: 16, height: 8 },
-            metadataAvailability: 'NOT_PROBED',
+  it.each([
+    'exif-little.jpg',
+    'exif-big.jpg',
+    'exif-little.webp',
+    'exif-big.webp',
+    'exif-little.png',
+    'exif-big.png',
+  ])('keeps %s probe-only output separate from recorded EXIF inspection', async (name) => {
+    const path = fileURLToPath(
+      new URL(`../../../tests/fixtures/metadata/${name}`, import.meta.url),
+    );
+    const probed = await executeCommand(['probe', path]);
+    expect(Object.keys(probed.output).sort()).toEqual(['media', 'schemaVersion']);
+    expect(probed).toMatchObject({
+      exitCode: 0,
+      output: {
+        media: {
+          dimensions: { width: 16, height: 8 },
+          metadataAvailability: 'NOT_PROBED',
+        },
+      },
+    });
+    const inspected = await executeCommand(['inspect', path]);
+    if (inspected.exitCode !== 0 || !('evidence' in inspected.output))
+      throw new Error('Expected report');
+    const carrier = name.endsWith('.jpg') ? 'jpeg' : name.endsWith('.png') ? 'png' : 'webp';
+    const analyzerId = `media-auth.${carrier}-exif`;
+    expect(inspected.output.evidence.find((e) => e.source.id === analyzerId)).toMatchObject({
+      status: 'DETECTED',
+      details: {
+        kind: 'RECORDED',
+        observations: expect.arrayContaining([
+          { kind: 'RECORDED', format: 'EXIF', field: 'software', value: 'MediaAuth <fixture>' },
+          {
+            kind: 'RECORDED',
+            format: 'EXIF',
+            field: 'orientation',
+            value: name.includes('little') ? 6 : 1,
           },
-        },
-      });
-      const inspected = await executeCommand(['inspect', path]);
-      if (inspected.exitCode !== 0 || !('evidence' in inspected.output))
-        throw new Error('Expected report');
-      const analyzerId = name.endsWith('.jpg') ? 'media-auth.jpeg-exif' : 'media-auth.webp-exif';
-      expect(inspected.output.evidence.find((e) => e.source.id === analyzerId)).toMatchObject({
-        status: 'DETECTED',
-        details: {
-          kind: 'RECORDED',
-          observations: expect.arrayContaining([
-            { kind: 'RECORDED', format: 'EXIF', field: 'software', value: 'MediaAuth <fixture>' },
-            {
-              kind: 'RECORDED',
-              format: 'EXIF',
-              field: 'orientation',
-              value: name.includes('little') ? 6 : 1,
-            },
-          ]),
-        },
-      });
-      expect(inspected.output.conclusion).toMatchObject({
-        verdict: 'INCONCLUSIVE',
-        origin: 'UNKNOWN',
-      });
-      // Corrupt only TIFF magic: valid container framing, unusable selected metadata.
-      const bytes = await readFile(path);
-      bytes.writeUInt16LE(43, name.endsWith('.jpg') ? 14 : 66);
-      const malformed = join(temporaryDirectory, 'bad-exif.bin');
-      await writeFile(malformed, bytes);
-      const result = await executeCommand(['inspect', malformed]);
-      if (result.exitCode !== 0 || !('evidence' in result.output))
-        throw new Error('Expected report');
-      expect(result.output.evidence.find((e) => e.source.id === analyzerId)).toMatchObject({
-        status: 'INCONCLUSIVE',
-      });
-      expect(result.output.evidence.find((e) => e.category === 'EXACT_IDENTITY')).toHaveProperty(
-        'status',
-        'DETECTED',
-      );
-    },
-  );
+        ]),
+      },
+    });
+    expect(inspected.output.conclusion).toMatchObject({
+      verdict: 'INCONCLUSIVE',
+      origin: 'UNKNOWN',
+    });
+    // Corrupt only TIFF magic: valid container framing, unusable selected metadata.
+    const bytes = await readFile(path);
+    bytes.writeUInt16LE(43, carrier === 'jpeg' ? 14 : carrier === 'png' ? 43 : 66);
+    if (carrier === 'png') bytes.writeUInt32BE(crc32(bytes.subarray(37, 311)), 311);
+    const malformed = join(temporaryDirectory, 'bad-exif.bin');
+    await writeFile(malformed, bytes);
+    const result = await executeCommand(['inspect', malformed]);
+    if (result.exitCode !== 0 || !('evidence' in result.output)) throw new Error('Expected report');
+    expect(result.output.evidence.find((e) => e.source.id === analyzerId)).toMatchObject({
+      status: 'INCONCLUSIVE',
+    });
+    expect(result.output.evidence.find((e) => e.category === 'EXACT_IDENTITY')).toHaveProperty(
+      'status',
+      'DETECTED',
+    );
+  });
 
   it('inspects the deterministic PNG and reports unavailable analysis without an authenticity claim', async () => {
     const result = await executeCommand(['inspect', fixturePath]);

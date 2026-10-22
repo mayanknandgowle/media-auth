@@ -39,14 +39,14 @@ describe('selected browser files', () => {
     });
     expect(report.conclusion.verdict).toBe('INCONCLUSIVE');
     expect(report.analyzers.filter((item) => item.status === 'UNAVAILABLE')).toHaveLength(
-      name.endsWith('.jpg') || name.endsWith('.webp') ? 6 : 7,
+      ['.jpg', '.webp', '.png'].some((extension) => name.endsWith(extension)) ? 7 : 8,
     );
     const view = createReportView(report);
     expect(view.hash).toMatch(/^[a-f0-9]{64}$/);
     expect(JSON.parse(view.json)).toEqual(report);
   });
 
-  it.each(['jpg', 'webp'])(
+  it.each(['jpg', 'webp', 'png'])(
     'exports recorded %s EXIF separately from encoded facts and conservative conclusions',
     async (format) => {
       const bytes = readFileSync(
@@ -57,7 +57,7 @@ describe('selected browser files', () => {
       expect(report.media.dimensions).toEqual({ width: 16, height: 8 });
       expect(
         view.evidence.find(
-          (e) => e.source.id === `media-auth.${format === 'jpg' ? 'jpeg' : 'webp'}-exif`,
+          (e) => e.source.id === `media-auth.${format === 'jpg' ? 'jpeg' : format}-exif`,
         ),
       ).toMatchObject({
         status: 'DETECTED',

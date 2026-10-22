@@ -48,6 +48,11 @@ for (const [command, prefix] of entries) {
       'e4502e792dffeadc50ae5558ae1629e174be33e60172ae3a3ed81cda3689872f',
     ],
     ['metadata/exif-big.webp', '1bf903d607cee3c0daec9e0e7d34fc7b273bb669c26950f3256eb86fce7d7b49'],
+    [
+      'metadata/exif-little.png',
+      '0d640af34e012a426237fd91ffdb589fa8dd395f0f19f44b1cb109e8f9d16dbf',
+    ],
+    ['metadata/exif-big.png', 'd97eb34cf3b475abade086f9890f5fff1773681cfca17bd451754d05f98ecaa8'],
     ['lossy.webp', 'fc3927eee0346e9c0ac714b66e4d157b7b5e15d1d1825e5f7ee301e9ea1a6d7a'],
     ['lossless.webp', 'f06216831f617441ac07a9fe1f8d49f91e62526b971eee3c06933b75a3411284'],
     ['alpha.webp', '3fa682dc8d44a3252ace27090c81b2a72e5e67ba64332c0867ea84ea5f25bd38'],
@@ -63,13 +68,15 @@ for (const [command, prefix] of entries) {
     assert.deepEqual(Object.keys(descriptor).sort(), ['media', 'schemaVersion']);
     assert.equal(
       descriptor.media.mimeType,
-      name.endsWith('.bmp')
-        ? 'image/bmp'
-        : name.endsWith('.gif')
-          ? 'image/gif'
-          : name.endsWith('.webp')
-            ? 'image/webp'
-            : 'image/jpeg',
+      name.endsWith('.png')
+        ? 'image/png'
+        : name.endsWith('.bmp')
+          ? 'image/bmp'
+          : name.endsWith('.gif')
+            ? 'image/gif'
+            : name.endsWith('.webp')
+              ? 'image/webp'
+              : 'image/jpeg',
     );
     assert.deepEqual(descriptor.media.dimensions, { width, height });
     const inspected = run(command, [...prefix, 'inspect', `tests/fixtures/${name}`], 0);
@@ -78,16 +85,18 @@ for (const [command, prefix] of entries) {
     assert.equal(analysis.conclusion.verdict, 'INCONCLUSIVE');
     assert.equal(
       analysis.analyzers.filter((item) => item.status === 'UNAVAILABLE').length,
-      name.endsWith('.jpg') || name.endsWith('.webp') ? 6 : 7,
+      ['.jpg', '.webp', '.png'].some((extension) => name.endsWith(extension)) ? 7 : 8,
     );
     const exif = analysis.evidence.find(
-      (item) => item.source.id === `media-auth.${name.endsWith('.webp') ? 'webp' : 'jpeg'}-exif`,
+      (item) =>
+        item.source.id ===
+        `media-auth.${name.endsWith('.png') ? 'png' : name.endsWith('.webp') ? 'webp' : 'jpeg'}-exif`,
     );
     assert.equal(
       exif.status,
       name.startsWith('metadata/')
         ? 'DETECTED'
-        : name.endsWith('.jpg') || name.endsWith('.webp')
+        : ['.jpg', '.webp', '.png'].some((extension) => name.endsWith(extension))
           ? 'NOT_DETECTED'
           : 'UNAVAILABLE',
     );

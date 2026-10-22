@@ -27,6 +27,7 @@ let currentReport: ReportView | undefined;
 const exifTitles = new Map([
   ['media-auth.jpeg-exif', 'JPEG EXIF fields'],
   ['media-auth.webp-exif', 'WebP EXIF fields'],
+  ['media-auth.png-exif', 'PNG EXIF fields'],
 ]);
 
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, text: string) {

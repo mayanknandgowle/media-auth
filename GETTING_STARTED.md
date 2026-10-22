@@ -2,7 +2,7 @@
 
 Inspect selected images on your device and export an explainable evidence report. This release supports the documented PNG, JPEG, WebP, single-image GIF, and 24-bit BMP subsets. It reports container dimensions and SHA-256 byte identity. Provenance verification, AI-generation, watermark, and manipulation analyzers are visibly unavailable; an inconclusive report is an honest result.
 
-JPEG and static WebP reports also show selected recorded EXIF camera/lens make/model, software, date/time strings and orientation. Fields may be forged or sensitive. Dates are not verified or normalized, and orientation does not change encoded dimensions. No EXIF found in the declared search scope (JPEG before the first scan, or the static WebP RIFF extent) is scoped absence, not authenticity; malformed metadata is inconclusive. GPS, owner/serial, maker notes, thumbnails and other metadata formats are not extracted.
+JPEG, static WebP and static PNG reports also show selected recorded EXIF camera/lens make/model, software, date/time strings and orientation. Fields may be forged or sensitive. Dates are not verified or normalized, and orientation does not change encoded dimensions. No EXIF found in the declared search scope (JPEG before the first scan, the static WebP RIFF extent, or the CRC-checked static PNG datastream) is scoped absence, not authenticity; malformed metadata is inconclusive. GPS, owner/serial, maker notes, thumbnails and other metadata formats are not extracted.
 
 ## Install the extension
 
