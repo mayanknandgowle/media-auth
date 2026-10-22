@@ -38,6 +38,11 @@ for (const [command, prefix] of entries) {
     ],
     ['baseline.jpg', '54264ccfe6f621aa45c147b6ac4f6b829ad7165545cf2e1a27a06e0be515775d'],
     ['progressive.jpg', 'f221219ce29cf87f8933a6f758c344ca94aa5f7524ae74943210b119f7be0b8e'],
+    [
+      'metadata/exif-little.jpg',
+      'b3504616bcf37c51c6e6cbf5630a2f49adbf62acb61c6338371d4b17e1eeaeca',
+    ],
+    ['metadata/exif-big.jpg', 'b9f6c769bc8890fac5d9c6addb83f1123cf082898f31233826cd10d8ad88e459'],
     ['lossy.webp', 'fc3927eee0346e9c0ac714b66e4d157b7b5e15d1d1825e5f7ee301e9ea1a6d7a'],
     ['lossless.webp', 'f06216831f617441ac07a9fe1f8d49f91e62526b971eee3c06933b75a3411284'],
     ['alpha.webp', '3fa682dc8d44a3252ace27090c81b2a72e5e67ba64332c0867ea84ea5f25bd38'],
@@ -66,7 +71,27 @@ for (const [command, prefix] of entries) {
     assert.equal(inspected.stderr, '');
     const analysis = JSON.parse(inspected.stdout);
     assert.equal(analysis.conclusion.verdict, 'INCONCLUSIVE');
-    assert.equal(analysis.analyzers.filter((item) => item.status === 'UNAVAILABLE').length, 5);
+    assert.equal(
+      analysis.analyzers.filter((item) => item.status === 'UNAVAILABLE').length,
+      name.endsWith('.jpg') ? 5 : 6,
+    );
+    const exif = analysis.evidence.find((item) => item.source.id === 'media-auth.jpeg-exif');
+    assert.equal(
+      exif.status,
+      name.startsWith('metadata/')
+        ? 'DETECTED'
+        : name.endsWith('.jpg')
+          ? 'NOT_DETECTED'
+          : 'UNAVAILABLE',
+    );
+    if (name.startsWith('metadata/')) {
+      assert.equal(descriptor.media.metadataAvailability, 'NOT_PROBED');
+      assert.ok(
+        exif.details.observations.some(
+          (item) => item.field === 'cameraModel' && item.value === 'Fixture Camera',
+        ),
+      );
+    }
     assert.equal(
       analysis.evidence.find((item) => item.category === 'EXACT_IDENTITY').details.value,
       hash,

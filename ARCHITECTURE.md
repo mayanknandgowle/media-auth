@@ -25,6 +25,8 @@ The current metadata path reports PNG/JPEG/WebP/GIF/BMP header observations; the
 
 All probe range requests and CLI file reads obey `min(64 KiB, maxChunkBytes)`. PNG splits fixed headers and CRC traversal at that boundary while retaining chunk-payload limits. The [test corpus](docs/PROBE_CORPUS.md) verifies these shared range invariants with guarded adapters; its Node-only byte builders stay outside production packages.
 
+The separate `media-auth.jpeg-exif` v0.1.0 analyzer uses bounded range access and a pure TIFF reader. Pre-scan absence and malformed/unavailable results stay separate from dimensions/hash evidence. Both clients explicitly compose eight analyzers. The probe descriptor's `NOT_PROBED` is not an aggregate statement about subsequent analyzers. Core/fusion are unchanged. See [ADR 0010](docs/adr/0010-bounded-jpeg-exif.md).
+
 ## Evidence and conclusions
 
 `Evidence` is a versioned discriminated union: `DETECTED`, `NOT_DETECTED` with search scope, `UNAVAILABLE` with a reason, or `INCONCLUSIVE` with a reason. Missing evidence, unavailable evidence, and negative observations cannot share a boolean. Evidence records source identity, category, explanation, reliability/completeness, machine-readable details, optional hash, normalized spatial bounds, and temporal bounds. Runtime validation constrains JSON depth, count, size, status, confidence, and attribution before accepting plugin output.

@@ -38,10 +38,33 @@ describe('selected browser files', () => {
       label: '<img onerror=alert(1)>.png',
     });
     expect(report.conclusion.verdict).toBe('INCONCLUSIVE');
-    expect(report.analyzers.filter((item) => item.status === 'UNAVAILABLE')).toHaveLength(5);
+    expect(report.analyzers.filter((item) => item.status === 'UNAVAILABLE')).toHaveLength(
+      name.endsWith('.jpg') ? 5 : 6,
+    );
     const view = createReportView(report);
     expect(view.hash).toMatch(/^[a-f0-9]{64}$/);
     expect(JSON.parse(view.json)).toEqual(report);
+  });
+
+  it('exports recorded EXIF separately from unrotated file facts and conservative conclusions', async () => {
+    const bytes = readFileSync(
+      new URL('../../../tests/fixtures/metadata/exif-little.jpg', import.meta.url),
+    );
+    const report = await analyzeSelectedFile(selected(bytes));
+    const view = createReportView(report);
+    expect(report.media.dimensions).toEqual({ width: 16, height: 8 });
+    expect(view.evidence.find((e) => e.source.id === 'media-auth.jpeg-exif')).toMatchObject({
+      status: 'DETECTED',
+      details: {
+        kind: 'RECORDED',
+        observations: expect.arrayContaining([
+          { kind: 'RECORDED', format: 'EXIF', field: 'orientation', value: 6 },
+          { kind: 'RECORDED', format: 'EXIF', field: 'cameraMake', value: 'MediaAuth' },
+        ]),
+      },
+    });
+    expect(JSON.parse(view.json)).toEqual(report);
+    expect(report.conclusion.origin).toBe('UNKNOWN');
   });
 
   it('checks empty/oversized/invalid size and limits before reading', async () => {

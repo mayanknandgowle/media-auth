@@ -70,7 +70,15 @@ function showReport(value: unknown) {
       item.status === 'DETECTED' ? 'Observed' : item.status.replaceAll('_', ' '),
     );
     badge.className = item.status === 'DETECTED' ? 'badge observed' : 'badge';
-    top.append(node('h3', categoryLabels[item.category] ?? item.category), badge);
+    top.append(
+      node(
+        'h3',
+        item.source.id === 'media-auth.jpeg-exif'
+          ? 'JPEG EXIF fields'
+          : (categoryLabels[item.category] ?? item.category),
+      ),
+      badge,
+    );
     card.append(top, node('p', item.explanation));
     if (
       (item.status === 'UNAVAILABLE' || item.status === 'INCONCLUSIVE') &&
@@ -85,6 +93,43 @@ function showReport(value: unknown) {
     attribution.className = 'attribution';
     card.append(attribution);
     if (item.status === 'DETECTED') {
+      if (
+        item.source.id === 'media-auth.jpeg-exif' &&
+        isRecord(item.details) &&
+        Array.isArray(item.details.observations)
+      ) {
+        const labels: Readonly<Record<string, string>> = {
+          blockPresent: 'EXIF block present',
+          cameraMake: 'Recorded camera make',
+          cameraModel: 'Recorded camera model',
+          software: 'Recorded software',
+          dateTime: 'Recorded date/time',
+          dateTimeOriginal: 'Recorded original date/time',
+          dateTimeDigitized: 'Recorded digitized date/time',
+          orientation: 'Recorded orientation (not applied)',
+          lensMake: 'Recorded lens make',
+          lensModel: 'Recorded lens model',
+        };
+        const fields = node('dl', '');
+        fields.className = 'facts';
+        for (const observation of item.details.observations) {
+          if (
+            !isRecord(observation) ||
+            observation.kind !== 'RECORDED' ||
+            observation.format !== 'EXIF' ||
+            typeof observation.field !== 'string'
+          )
+            continue;
+          const label = labels[observation.field];
+          const value = observation.value;
+          if (
+            label &&
+            (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+          )
+            fields.append(node('dt', label), node('dd', String(value)));
+        }
+        card.append(fields);
+      }
       const detail = node('details', '');
       detail.append(
         node('summary', 'Recorded details'),

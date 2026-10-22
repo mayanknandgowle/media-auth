@@ -9,6 +9,8 @@ const routes = new Map([
 for (const [name, mime] of [
   ['baseline.jpg', 'image/jpeg'],
   ['progressive.jpg', 'image/jpeg'],
+  ['metadata/exif-little.jpg', 'image/jpeg'],
+  ['metadata/exif-big.jpg', 'image/jpeg'],
   ['lossy.webp', 'image/webp'],
   ['lossless.webp', 'image/webp'],
   ['alpha.webp', 'image/webp'],

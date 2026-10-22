@@ -7,7 +7,12 @@ import assert from 'node:assert/strict';
 const browser = await chromium.launch({ channel: 'chromium', headless: true });
 try {
   const page = await browser.newPage();
-  for (const name of ['baseline.jpg', 'progressive.jpg']) {
+  for (const name of [
+    'baseline.jpg',
+    'progressive.jpg',
+    'metadata/exif-little.jpg',
+    'metadata/exif-big.jpg',
+  ]) {
     const bytes = await readFile(new URL(`../tests/fixtures/${name}`, import.meta.url));
     const result = await page.evaluate(async (base64) => {
       const image = new Image();
@@ -24,10 +29,13 @@ try {
         pixels: Array.from(context.getImageData(0, 0, image.width, image.height).data),
       };
     }, bytes.toString('base64'));
-    assert.equal(result.width, 16);
-    assert.equal(result.height, 8);
+    const rotated = name === 'metadata/exif-little.jpg';
+    assert.equal(result.width, rotated ? 8 : 16);
+    assert.equal(result.height, rotated ? 16 : 8);
     assert.ok(result.pixels.every((value, i) => value === (i % 4 === 3 ? 255 : 128)));
-    console.log(`${name}: decoded 16x8; all pixels RGBA(128,128,128,255)`);
+    console.log(
+      `${name}: decoded ${result.width}x${result.height}; all pixels RGBA(128,128,128,255)`,
+    );
   }
   console.log(`Decoder: Chromium ${browser.version()}`);
 } finally {

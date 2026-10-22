@@ -10,7 +10,9 @@ import {
   type AnalysisContext,
 } from '@media-auth/core';
 import type { ExactHasher, MetadataAdapter, MetadataReadResult } from './contracts.js';
+import { jpegExifAnalyzer } from './jpeg-exif.js';
 export type * from './contracts.js';
+export { jpegExifAdapter } from './jpeg-exif.js';
 
 const VERSION = '0.1.0';
 const metadataIdentity: EvidenceSource = { id: 'media-auth.container-metadata', version: '0.5.0' };
@@ -47,7 +49,7 @@ export const containerMetadataAdapter: MetadataAdapter = {
       ],
       limitations: [
         'Container observations do not establish capture device, creator, editing history, or authenticity.',
-        'EXIF, XMP, IPTC, and ICC payload parsing is not implemented.',
+        'This dimensions adapter does not parse EXIF, XMP, IPTC, or ICC payloads; consult separate metadata evidence.',
         'Dimensions are encoded dimensions; metadata orientation is not applied.',
         ...(media.descriptor.mimeType === 'image/gif'
           ? ['GIF dimensions describe its logical screen; pixel aspect ratio is not applied.']
@@ -158,6 +160,7 @@ function deferredAnalyzer(id: string, category: EvidenceCategory, reason: string
 export function createFoundationRegistry(hasher: ExactHasher): AnalyzerRegistry {
   return new AnalyzerRegistry([
     metadataAnalyzer,
+    jpegExifAnalyzer,
     fingerprintAnalyzer(hasher),
     deferredAnalyzer(
       'media-auth.provenance',

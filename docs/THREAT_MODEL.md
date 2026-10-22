@@ -23,7 +23,7 @@ Protect selected media confidentiality, browser/page access, filesystem access, 
 
 The CLI JPEG probe checks selected marker, frame, and scan framing with a forward buffer. Lengths are checked before reading or skipping; only small frame/scan headers are copied. Each marker, including SOI, EOI, and restart markers, counts against `maxChunks`. Segment payloads and entropy intervals obey `maxChunkBytes`; marker fill bytes are bounded by `maxBytes`. The reader requests at most the smaller of 64 KiB and `maxChunkBytes`. Dimensions obey `maxPixels`.
 
-JPEG coding tables, full progressive scan progression, entropy correctness, restart MCU intervals, metadata payloads, and orientation are not validated. Successful framing inspection is not a promise of decodability or authenticity. Unsupported processes, deferred height, and trailing/concatenated streams are rejected. There is no decoder or additional native/runtime dependency. The extension remains PNG-only.
+JPEG coding tables, full progressive scan progression, entropy correctness, restart MCU intervals, metadata payloads, and orientation are not validated. Successful framing inspection is not a promise of decodability or authenticity. Unsupported processes, deferred height, and trailing/concatenated streams are rejected. There is no decoder or additional native/runtime dependency. The extension uses all five documented probe subsets for explicit local/page inspection.
 
 ## WebP scope
 
@@ -52,6 +52,8 @@ Use division before multiplying padded stride by absolute height; do not use bit
 Cancellation in core is cooperative. A promise timeout cannot stop an in-process analyzer, and no hard timeout is claimed. Untrusted third-party analyzers must not be loaded until an isolation protocol and enforcement mechanism exist. Remote opt-in is a capability gate for trusted adapters, not a network sandbox.
 
 ## Tests and review
+
+The JPEG EXIF analyzer independently validates limits and byte access. It bounds one pre-scan APP1 allocation, 4 KiB requests, markers/fill bytes, two directories, entry counts and text length; offsets are checked before access. Overlap/cycles, duplicates and malformed selected fields discard partial observations. Unknown payloads and GPS/owner/serial, maker notes, thumbnails and next-IFD graphs are never followed. Recorded dates, camera/software and orientation are attacker-controlled strings/numbers, rendered as text and never promoted to provenance/authenticity. Missing pre-scan EXIF does not establish absence of all metadata. Exports can disclose selected recorded fields; see [ADR 0010](adr/0010-bounded-jpeg-exif.md).
 
 Tests cover malformed/truncated/CRC-invalid PNGs, malformed/truncated JPEG frame and scan headers, stuffing/restart errors, JPEG marker/entropy budgets and range-adapter contracts, oversized dimensions/bytes/chunks, undersupplied/oversupplied streams, hash vectors, failed/invalid analyzers, duplicate registry/evidence IDs, remote opt-in, cancellation, unsafe URLs, invalid senders/messages, stale selections, and acquisition timeouts. Browser smoke and manual host UI checks have distinct scopes; see [VALIDATION.md](VALIDATION.md).
 

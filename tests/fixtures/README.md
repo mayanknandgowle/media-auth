@@ -22,6 +22,17 @@ The ten fixtures below also seed the [cross-format adversarial corpus](../../doc
 
 Run `npm run fixture:generate` to regenerate all three images. After `npx playwright install chromium`, run `node scripts/verify-jpeg-fixtures.mjs` to independently decode both JPEGs and check every pixel with Chromium. That verifies these fixtures, not the probe's ability to establish general JPEG decodability. JPEG fixtures are used by CLI/media tests and the explicit extension fixture gallery.
 
+## Recorded EXIF fixtures
+
+`metadata/exif-little.jpg` and `metadata/exif-big.jpg` insert original synthetic classic TIFF EXIF into the unchanged baseline JPEG. They are separate from the ten probe-corpus seeds. Both record MediaAuth / Fixture Camera, `MediaAuth <fixture>` software, recorded dates `2026:10:22 12:34:56` and digitized `2026:10:22 12:35:00`, and MediaAuth / Fixture Lens. Little-endian orientation is 6; big-endian orientation is 1. No real device/person/location data is used. Fixtures/generator use Apache-2.0.
+
+| File                       | Bytes | SHA-256                                                            |
+| -------------------------- | ----- | ------------------------------------------------------------------ |
+| `metadata/exif-little.jpg` | 435   | `b3504616bcf37c51c6e6cbf5630a2f49adbf62acb61c6338371d4b17e1eeaeca` |
+| `metadata/exif-big.jpg`    | 435   | `b9f6c769bc8890fac5d9c6addb83f1123cf082898f31233826cd10d8ad88e459` |
+
+Regenerate explicitly with `node scripts/generate-exif-fixtures.mjs`; ordinary checks consume pinned bytes. `node scripts/verify-jpeg-fixtures.mjs` decodes all four JPEGs with Chromium and checks every gray pixel. Chromium applies orientation 6 (8 × 16 display); the MediaAuth report retains encoded 16 × 8 and records orientation separately. This validates fixtures, not general EXIF/JPEG conformance. The loopback server adds only the two fixed `/metadata/*.jpg` routes; browser tests explicitly insert these controlled images into the test page.
+
 ## WebP fixtures
 
 `lossy.webp`, `lossless.webp`, and `alpha.webp` are original generated 16 × 8 gray images, from constant RGBA canvas pixels (128,128,128,255), or alpha 128 for `alpha.webp`. They use the repository's Apache-2.0 license and contain no downloaded media or private information. The alpha fixture includes Chromium's generated color profile; it is not interpreted by the probe.

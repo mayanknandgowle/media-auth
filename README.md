@@ -6,6 +6,8 @@ Install the image inspector using the [getting-started guide](GETTING_STARTED.md
 
 ## Current status
 
+The first Phase 2 increment adds selected recorded JPEG EXIF fields to `inspect` and the extension: camera/lens make/model, software, date/time strings and orientation. These are forgeable recorded claims. Separate evidence states scoped absence, malformed metadata or unavailable access; dimensions stay encoded and conclusions stay conservative. See [ADR 0010](docs/adr/0010-bounded-jpeg-exif.md) and the [validation record](docs/plans/2026-10-22-jpeg-exif-metadata.md).
+
 The foundation includes Phase 1 media-probing increments for local CLI inspection of static PNG/WebP, single-image GIF, 24-bit BI_RGB BMP, and 8-bit baseline/progressive JPEG. The Chromium Manifest V3 image inspector supports the same format subsets for explicitly selected local files and eligible page assets. The shared pipeline records header observations, computes exact SHA-256 identities, and reports deferred analyzers as `UNAVAILABLE`. The conservative conclusion is `INCONCLUSIVE` when observations exist and `UNKNOWN` when no usable evidence exists. Neither means authentic or fake.
 
 | Workspace            | Responsibility                                                                                      |
@@ -42,6 +44,7 @@ npm run build
 node apps/cli/dist/index.js inspect tests/fixtures/known.png
 node apps/cli/dist/index.js probe tests/fixtures/baseline.jpg
 node apps/cli/dist/index.js inspect tests/fixtures/progressive.jpg
+node apps/cli/dist/index.js inspect tests/fixtures/metadata/exif-little.jpg
 node apps/cli/dist/index.js probe tests/fixtures/lossless.webp
 node apps/cli/dist/index.js inspect tests/fixtures/alpha.webp
 node apps/cli/dist/index.js probe tests/fixtures/rgb24-top-down.bmp
@@ -79,6 +82,7 @@ See the current [image-inspection product record](docs/plans/2026-10-22-image-in
 - The PNG probe checks selected container structure and CRCs. It does **not** decompress pixels, fully validate compressed image data, or parse EXIF/XMP/IPTC/text/profile contents.
 - The JPEG probe supports one 8-bit baseline/progressive frame with up to four components. It checks selected marker/frame/scan structure, not coding tables, entropy validity, or full format conformance. Dimensions are encoded dimensions; metadata orientation is not applied. Unsupported JPEG processes, deferred height, and trailing streams are rejected.
 - The WebP probe checks selected static RIFF/chunk and VP8/VP8L/VP8X headers, encoded dimensions, and reconstruction order. Animation, scaled VP8 frames, duplicate metadata, and trailing data are rejected. Compressed pixels, alpha data, and metadata payloads are not decoded; transparency hints are not verified. See [ADR 0005](docs/adr/0005-static-webp-probe.md) for the accepted subset. None of these probes establishes decodability or authenticity.
+- JPEG EXIF inspection reads selected classic TIFF ASCII fields and orientation from one pre-scan APP1 block. GPS, owner/serial, maker notes, thumbnails, XMP/IPTC/ICC and post-scan metadata are not extracted. Malformed/ambiguous fields are inconclusive; dates remain strings and orientation is not applied. No pre-scan EXIF is scoped absence, never authenticity. CLI `probe` does not run this analyzer; its `NOT_PROBED` descriptor stays unchanged.
 - Recorded metadata can be forged. SHA-256 proves exact byte identity, not origin, authorship, provenance, or authenticity. CRC32 is only a container integrity check.
 - The GIF probe checks selected single-image framing, palette extents, and image bounds, reporting logical-screen dimensions. It rejects multiple images, plain-text rendering, unsupported extensions, and trailing streams. LZW pixels and extension contents are not decoded; transparency, timing, looping, and disposal rendering are not verified. Pixel aspect ratio is not applied. See [ADR 0006](docs/adr/0006-single-image-gif-probe.md) for the subset and block/payload budgets.
 - The BMP probe accepts uncompressed 24-bit images with the 40-byte Windows header. It checks signed dimensions and padded-row extents, without interpreting pixels, gaps, or resolution metadata. Other headers, depths, compression, and color-table declarations are unsupported. See [ADR 0007](docs/adr/0007-24-bit-bmp-probe.md).

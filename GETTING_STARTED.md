@@ -2,6 +2,8 @@
 
 Inspect selected images on your device and export an explainable evidence report. This release supports the documented PNG, JPEG, WebP, single-image GIF, and 24-bit BMP subsets. It reports container dimensions and SHA-256 byte identity. Provenance verification, AI-generation, watermark, and manipulation analyzers are visibly unavailable; an inconclusive report is an honest result.
 
+JPEG reports also show selected recorded EXIF camera/lens make/model, software, date/time strings and orientation. Fields may be forged or sensitive. Dates are not verified or normalized, and orientation does not change encoded dimensions. No EXIF found before the first scan is scoped absence, not authenticity; malformed metadata is inconclusive. GPS, owner/serial, maker notes, thumbnails and other metadata formats are not extracted.
+
 ## Install the extension
 
 Use Chrome or Chromium 116 or newer.
@@ -19,7 +21,7 @@ Choose **Open a local image** in the inspector and select a file up to 8 MiB. No
 
 Read the assessment, file facts, SHA-256, evidence cards, and scope/limitations. **Observed** identifies an available observation; it does not mean authentic. **Unavailable** means that analysis was not performed. File hashes establish exact byte identity, never origin or authorship. A header probe does not guarantee full decodability.
 
-Choose **Download JSON report** to save the current evidence. The report includes acquisition context and may include the selected filename, but not raw image bytes. Only your click initiates the download. **Clear session** clears the displayed result and forgets page selections; it does not delete reports you already saved.
+Choose **Download JSON report** to save the current evidence. The report includes acquisition context and may include the selected filename and recorded EXIF fields, but not raw image bytes. Only your click initiates the download. **Clear session** clears the displayed result and forgets page selections; it does not delete reports you already saved.
 
 ## Inspect a page image
 

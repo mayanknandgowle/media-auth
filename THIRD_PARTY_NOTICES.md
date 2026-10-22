@@ -4,6 +4,8 @@ Original MediaAuth source, documentation, and generated PNG/JPEG/WebP/GIF/BMP fi
 
 The Graphics Interchange Format is the copyright property of CompuServe Incorporated; GIF is a service mark of CompuServe Incorporated. This acknowledgement follows the [format specification's attribution provision](https://www.w3.org/Graphics/GIF/spec-gif89a.txt). The GIF probe and fixture generator are original implementations; the specification and third-party decoder code are not redistributed here.
 
+JPEG EXIF reader and synthetic metadata fixtures are original Apache-2.0 material. Publisher format references are linked in [ADR 0010](docs/adr/0010-bounded-jpeg-exif.md); no EXIF specification or third-party parser is redistributed.
+
 There are currently no third-party runtime dependencies bundled into the CLI or extension. The build uses native Node cryptography and browser WebCrypto. Development tooling remains separately licensed:
 
 | Dependency                            | License    |

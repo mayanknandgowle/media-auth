@@ -24,7 +24,7 @@ This is an aspirational sequence, not a delivery schedule. Later phases require 
 
 The first Phase 1 increment adds bounded 8-bit baseline/progressive JPEG probing and CLI `probe`, alongside static PNG. Broader formats and complete parser validation remain deferred; see [ADR 0004](docs/adr/0004-jpeg-probe-and-cli.md).
 
-The second Phase 1 increment adds selected static WebP RIFF/VP8/VP8L/VP8X probing to the CLI, with original fixtures, independent decode checks, and adversarial header/budget tests; see [ADR 0005](docs/adr/0005-static-webp-probe.md). Phase 1 remains incomplete: broader containers, sustained fuzzing, and more extensive adversarial corpora are future work. The extension remains PNG-only.
+The second Phase 1 increment adds selected static WebP RIFF/VP8/VP8L/VP8X probing to the CLI, with original fixtures, independent decode checks, and adversarial header/budget tests; see [ADR 0005](docs/adr/0005-static-webp-probe.md). Phase 1 remains incomplete: broader containers, sustained fuzzing, and more extensive adversarial corpora are future work. The extension was PNG-only at that increment.
 
 Exact identity and minimal discovery already exist in Phase 0; their later phases refer to broader capabilities. No passive surveillance, face recognition, watermark cracking, or arbitrary URL-fetch service is planned as part of this foundation. See [research boundaries](docs/RESEARCH.md) for evaluation requirements.
 
@@ -36,4 +36,6 @@ The fifth Phase 1 increment adds bounded uncompressed 24-bit BI_RGB BMP probing 
 
 The sixth Phase 1 increment adds [seeded probe stress](docs/PROBE_STRESS.md): bounded multi-edit mutations, independent case replay, guarded reads, and a test-worker deadline across all five formats. This advances adversarial execution evidence; it does not complete Phase 1, implement production isolation, or begin metadata intelligence.
 
-The local image-inspection release brings the five existing format subsets to the extension, adds explicit local files, readable evidence reports, JSON export, and session clearing. It connects existing analysis to a usable client; metadata intelligence and genuine authenticity/provenance analyzers remain later phases. See [release workflow](GETTING_STARTED.md).
+The local image-inspection release brings the five existing format subsets to the extension, adds explicit local files, readable evidence reports, JSON export, and session clearing. It connects existing analysis to a usable client; genuine authenticity/provenance analyzers remain later phases. See [release workflow](GETTING_STARTED.md).
+
+The first Phase 2 increment begins bounded metadata intelligence with selected recorded JPEG EXIF fields, a separate analyzer, scoped absence/error states, endian fixtures and client display/export. This is a narrow classic TIFF subset, not complete EXIF support or a device/authenticity inference. XMP/IPTC/ICC, Unicode, broader containers and genuine provenance remain deferred. See [ADR 0010](docs/adr/0010-bounded-jpeg-exif.md).

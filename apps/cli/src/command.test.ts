@@ -64,7 +64,7 @@ describe('CLI commands', () => {
         throw new Error('Expected image analysis.');
       expect(
         inspected.output.analyzers.filter((analyzer) => analyzer.status === 'UNAVAILABLE'),
-      ).toHaveLength(5);
+      ).toHaveLength(mimeType === 'image/jpeg' ? 5 : 6);
       expect(inspected.output.conclusion.verdict).toBe('INCONCLUSIVE');
       expect(inspected.output.evidence.find((item) => item.category === 'METADATA')).toMatchObject({
         source: { id: 'media-auth.container-metadata', version: '0.5.0' },
@@ -87,6 +87,65 @@ describe('CLI commands', () => {
         exitCode: 1,
         output: { error: { code: 'INVALID_INPUT' } },
       });
+    },
+  );
+
+  it.each(['exif-little.jpg', 'exif-big.jpg'])(
+    'keeps %s probe-only output separate from recorded EXIF inspection',
+    async (name) => {
+      const path = fileURLToPath(
+        new URL(`../../../tests/fixtures/metadata/${name}`, import.meta.url),
+      );
+      const probed = await executeCommand(['probe', path]);
+      expect(Object.keys(probed.output).sort()).toEqual(['media', 'schemaVersion']);
+      expect(probed).toMatchObject({
+        exitCode: 0,
+        output: {
+          media: {
+            dimensions: { width: 16, height: 8 },
+            metadataAvailability: 'NOT_PROBED',
+          },
+        },
+      });
+      const inspected = await executeCommand(['inspect', path]);
+      if (inspected.exitCode !== 0 || !('evidence' in inspected.output))
+        throw new Error('Expected report');
+      expect(
+        inspected.output.evidence.find((e) => e.source.id === 'media-auth.jpeg-exif'),
+      ).toMatchObject({
+        status: 'DETECTED',
+        details: {
+          kind: 'RECORDED',
+          observations: expect.arrayContaining([
+            { kind: 'RECORDED', format: 'EXIF', field: 'software', value: 'MediaAuth <fixture>' },
+            {
+              kind: 'RECORDED',
+              format: 'EXIF',
+              field: 'orientation',
+              value: name.includes('little') ? 6 : 1,
+            },
+          ]),
+        },
+      });
+      expect(inspected.output.conclusion).toMatchObject({
+        verdict: 'INCONCLUSIVE',
+        origin: 'UNKNOWN',
+      });
+      // Corrupt only TIFF magic: valid JPEG framing, unusable selected metadata.
+      const bytes = await readFile(path);
+      bytes.writeUInt16LE(43, 14);
+      const malformed = join(temporaryDirectory, 'bad-exif.jpg');
+      await writeFile(malformed, bytes);
+      const result = await executeCommand(['inspect', malformed]);
+      if (result.exitCode !== 0 || !('evidence' in result.output))
+        throw new Error('Expected report');
+      expect(
+        result.output.evidence.find((e) => e.source.id === 'media-auth.jpeg-exif'),
+      ).toMatchObject({ status: 'INCONCLUSIVE' });
+      expect(result.output.evidence.find((e) => e.category === 'EXACT_IDENTITY')).toHaveProperty(
+        'status',
+        'DETECTED',
+      );
     },
   );
 
