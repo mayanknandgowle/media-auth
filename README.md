@@ -2,9 +2,11 @@
 
 An open foundation for media authenticity, provenance, and forensic evidence. MediaAuth asks **what evidence supports a conclusion?** It is not a binary “AI detector,” and this bootstrap does not perform AI detection.
 
+Install the image inspector using the [getting-started guide](GETTING_STARTED.md), or build an unpacked distribution with `npm run package:extension`. The archive is written to `dist/mediaauth-image-inspector.zip`.
+
 ## Current status
 
-The foundation includes Phase 1 media-probing increments for local CLI inspection of static PNG/WebP, single-image GIF, 24-bit BI_RGB BMP, and 8-bit baseline/progressive JPEG. The Chromium Manifest V3 extension retains its PNG workflow. The shared pipeline records header observations, computes exact SHA-256 identities, and reports deferred analyzers as `UNAVAILABLE`. The conservative conclusion is `INCONCLUSIVE` when observations exist and `UNKNOWN` when no usable evidence exists. Neither means authentic or fake.
+The foundation includes Phase 1 media-probing increments for local CLI inspection of static PNG/WebP, single-image GIF, 24-bit BI_RGB BMP, and 8-bit baseline/progressive JPEG. The Chromium Manifest V3 image inspector supports the same format subsets for explicitly selected local files and eligible page assets. The shared pipeline records header observations, computes exact SHA-256 identities, and reports deferred analyzers as `UNAVAILABLE`. The conservative conclusion is `INCONCLUSIVE` when observations exist and `UNKNOWN` when no usable evidence exists. Neither means authentic or fake.
 
 | Workspace            | Responsibility                                                                                      |
 | -------------------- | --------------------------------------------------------------------------------------------------- |
@@ -12,7 +14,7 @@ The foundation includes Phase 1 media-probing increments for local CLI inspectio
 | `packages/media`     | Bounded memory access, PNG/JPEG/WebP/GIF/BMP probes, and byte-signature dispatch                    |
 | `packages/analyzers` | Recorded metadata, exact identity, native Node/Web hashing adapters, deferred analyzer declarations |
 | `apps/cli`           | Local regular-file access and JSON commands                                                         |
-| `apps/extension`     | Explicit media discovery/selection, same-origin acquisition, side panel                             |
+| `apps/extension`     | Explicit local-file/page selection, bounded acquisition, evidence reports and JSON export           |
 
 The domain represents image, video, and audio; implemented inspection covers static PNG, selected static WebP containers, single-image GIF87a/GIF89a, 24-bit BI_RGB BMP, and selected JPEG processes. See [architecture](ARCHITECTURE.md), [decisions](docs/adr/0001-workspaces-and-boundaries.md), and [roadmap](ROADMAP.md).
 
@@ -62,14 +64,14 @@ npm run fixture:serve
 1. In Chrome/Chromium 116 or newer, open `chrome://extensions`, enable Developer mode, and choose **Load unpacked**.
 2. Select `apps/extension/dist` from this checkout.
 3. Open `http://127.0.0.1:4173/` and invoke MediaAuth from the extension toolbar.
-4. In the side panel, discover media and select the known PNG.
-5. Expect a 1 × 1 PNG, exact hash, recorded header observations, unavailable advanced analyzers, and an inconclusive verdict.
+4. Choose a supported local image directly, or discover page media and select the known PNG.
+5. Read file facts, exact hash, evidence cards, unavailable reasons and scope. Export the current report with **Download JSON report**, or use **Clear session** to forget it. The known PNG reports 1 × 1 and an inconclusive assessment.
 
-Only `activeTab`, `scripting`, and `sidePanel` permissions are requested. There are no blanket host permissions or always-running content scripts. Invoke the extension again after navigation if access has expired. The initial workflow handles top-frame, same-origin HTTP(S) image assets only. Cross-origin images, authenticated assets requiring cookies, redirects, blobs, SVG, JPEG, WebP, GIF, BMP, video, audio, and capture workflows are not yet supported. It does not silently substitute a screenshot.
+Only `activeTab`, `scripting`, and `sidePanel` permissions are requested. There are no blanket host permissions or always-running content scripts. Invoke the extension again after navigation if access has expired. Page acquisition handles top-frame, same-origin HTTP(S) image assets. Local-file inspection needs no page access. Supported container subsets match the CLI. Cross-origin page acquisition, authenticated assets requiring cookies, redirects, blob/data URLs, SVG, video, audio, and captures remain unsupported. It does not silently substitute a screenshot.
 
 Browser automation setup: `npx playwright install chromium`, then `npm run test:browser` after a build. See [validation](docs/VALIDATION.md) for the automated smoke scope and the separately observed native Chrome toolbar/side-panel results.
 
-See the [JPEG/CLI record](docs/plans/2026-10-15-media-probe-cli.md), [WebP/CLI record](docs/plans/2026-10-19-webp-probe-cli.md), [GIF/CLI record](docs/plans/2026-10-19-gif-probe-cli.md), and current [BMP/CLI execution and validation record](docs/plans/2026-10-19-bmp-probe-cli.md). `node scripts/verify-jpeg-fixtures.mjs`, `node scripts/verify-webp-fixtures.mjs`, `node scripts/verify-gif-fixtures.mjs`, and `node scripts/verify-bmp-fixtures.mjs` independently decode the original fixtures with Chromium; CI's browser job is configured to run all four. Fixture decoding is not a general decodability guarantee from the probes.
+See the current [image-inspection product record](docs/plans/2026-10-22-image-inspection-product.md) for local-file input, report export and browser validation. Historical parser records: [JPEG/CLI record](docs/plans/2026-10-15-media-probe-cli.md), [WebP/CLI record](docs/plans/2026-10-19-webp-probe-cli.md), [GIF/CLI record](docs/plans/2026-10-19-gif-probe-cli.md), and current [BMP/CLI execution and validation record](docs/plans/2026-10-19-bmp-probe-cli.md). `node scripts/verify-jpeg-fixtures.mjs`, `node scripts/verify-webp-fixtures.mjs`, `node scripts/verify-gif-fixtures.mjs`, and `node scripts/verify-bmp-fixtures.mjs` independently decode the original fixtures with Chromium; CI's browser job is configured to run all four. Fixture decoding is not a general decodability guarantee from the probes.
 
 ## Limits and interpretation
 

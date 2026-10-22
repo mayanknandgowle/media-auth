@@ -1,5 +1,7 @@
 # Foundation validation
 
+The current image-inspection client execution record is [2026-10-22](plans/2026-10-22-image-inspection-product.md), covering all five formats, explicit local files, readable reports, export/clear, and unpacked distribution. The historical foundation results below retain their original scope; they do not verify later native browser interactions or remote CI.
+
 Executed on 2026-10-09 on Windows, Node 24.15.0 / npm 11.15.0. Commands are run from the repository root. This report describes observed local results; it does not claim CI has run remotely.
 
 | Command                           | Observed result                                                                                     |

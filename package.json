@@ -27,7 +27,8 @@
     "smoke:cli": "node scripts/smoke-cli.mjs",
     "test:browser": "node scripts/smoke-extension.mjs",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test && npm run build && npm run smoke:cli",
-    "stress:probes": "node scripts/stress-probes.mjs"
+    "stress:probes": "node scripts/stress-probes.mjs",
+    "package:extension": "npm run build:extension && node scripts/package-extension.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

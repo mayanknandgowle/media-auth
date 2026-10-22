@@ -62,3 +62,9 @@ The [cross-format corpus](PROBE_CORPUS.md) runs named errors, deterministic trun
 ## Test-only stress containment
 
 The [seeded stress runner](PROBE_STRESS.md) bounds generated input/edit/case counts and runs existing probes in a worker terminated by a parent deadline. Range-guard violations remain failures even if caught by the probe. V8 heap/stack caps are not total-memory limits and the worker is not a security sandbox. Generated cases are original synthetic bytes retained only in memory. No production execution, acquisition, permission, or privacy boundary changes; see [ADR 0008](adr/0008-test-only-probe-stress-worker.md).
+
+## Selected local files and report export
+
+The panel file adapter checks declared size before reader creation/allocation and enforces exact stream size, chunk count/size, and an acquisition deadline. It cancels/releases readers on completion/failure; byte-signature probes enforce their usual pixel/structure budgets. Local-file access does not use page scripting, arbitrary filesystem paths, or runtime media messages.
+
+Report presentation applies JSON/evidence budgets, validates facts/hash encoding and conclusion references, and renders untrusted strings with textContent. Exports use a fixed download name and a revoked object URL, with a user click required; no media bytes or HTML are exported. New/failed operations disable the previous export. Authenticated exact `CLEAR` requests drop worker selections without needing page access. No new permissions or relaxed CSP. Browser download handling remains part of the browser trust boundary; see [ADR 0009](adr/0009-local-image-inspection-client.md).

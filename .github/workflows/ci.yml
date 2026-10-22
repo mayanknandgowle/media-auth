@@ -35,5 +35,5 @@ jobs:
       - run: node scripts/verify-webp-fixtures.mjs
       - run: node scripts/verify-gif-fixtures.mjs
       - run: node scripts/verify-bmp-fixtures.mjs
-      - run: npm run build:extension
+      - run: npm run package:extension
       - run: npm run test:browser

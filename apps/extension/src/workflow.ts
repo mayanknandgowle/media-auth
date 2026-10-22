@@ -1,17 +1,16 @@
-import { analyze, DEFAULT_LIMITS, type AnalysisResult } from '@media-auth/core';
-import { createMemoryHandle, pngProbe } from '@media-auth/media';
+import { analyze, DEFAULT_LIMITS, type AnalysisResult, type MediaSource } from '@media-auth/core';
+import { createMemoryHandle, imageProbe } from '@media-auth/media';
 import { createFoundationRegistry } from '@media-auth/analyzers';
 import { webSha256Hasher } from '@media-auth/analyzers/web';
 import type { PanelRequest, PanelResponse } from './protocol.js';
 import type { SelectionRegistry, Selection } from './selection.js';
 
-export async function analyzeAcquiredImage(bytes: Uint8Array): Promise<AnalysisResult> {
+export async function analyzeAcquiredImage(
+  bytes: Uint8Array,
+  source: MediaSource = { acquisition: 'ORIGINAL_WEB_ASSET' },
+): Promise<AnalysisResult> {
   const handle = createMemoryHandle(bytes, DEFAULT_LIMITS);
-  const descriptor = await pngProbe.probe(
-    handle,
-    { acquisition: 'ORIGINAL_WEB_ASSET' },
-    DEFAULT_LIMITS,
-  );
+  const descriptor = await imageProbe.probe(handle, source, DEFAULT_LIMITS);
   return analyze({ descriptor, handle }, createFoundationRegistry(webSha256Hasher), {
     limits: DEFAULT_LIMITS,
   });
@@ -34,6 +33,10 @@ export function createWorkflow(
     if (busy) return { kind: 'ERROR', message: 'An operation is already running.' };
     busy = true;
     try {
+      if (request.kind === 'CLEAR') {
+        registry.clear();
+        return { kind: 'CLEARED' };
+      }
       const tab = await port.activeTab();
       if (request.kind === 'DISCOVER') {
         registry.clear();

@@ -3,34 +3,102 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MediaAuth</title>
+    <title>MediaAuth · Image Inspector</title>
     <link rel="stylesheet" href="panel.css" />
     <script src="panel.js" type="module"></script>
   </head>
   <body>
     <main>
-      <h1>MediaAuth <small>Foundation</small></h1>
-      <p>
-        Inspect image evidence locally. This version supports PNG files; it does not detect AI
-        generation or verify provenance.
-      </p>
-      <p>
-        Open this panel from the toolbar on the page to inspect. Discover lists page images; only
-        selecting an image acquires its bytes.
-      </p>
-      <button id="discover" type="button">Discover page images</button>
-      <p id="status" role="status" aria-live="polite">No page inspected.</p>
-      <ul id="candidates" aria-label="Discovered images"></ul>
-      <section aria-labelledby="result-heading">
-        <h2 id="result-heading">Evidence report</h2>
-        <p id="summary">Select an image to begin.</p>
-        <pre id="result" tabindex="0" aria-label="Structured analysis result"></pre>
+      <header>
+        <a class="brand" href="#top" aria-label="MediaAuth home"
+          ><span class="mark" aria-hidden="true">M</span>MediaAuth</a
+        ><span class="local-badge">LOCAL INSPECTION</span>
+      </header>
+      <section class="intro" id="top">
+        <p class="eyebrow">THE IMAGE INSPECTOR</p>
+        <h1>Know what the<br />file can tell you.</h1>
+        <p class="lede">
+          Inspect image structure, recorded dimensions, and exact file identity. Follow the
+          evidence, with its limits in view.
+        </p>
       </section>
-      <p class="note">
-        Only same-origin HTTP(S) image assets can be acquired. No screenshots, remote analysis,
-        telemetry, or saved media. Fetching the selected asset contacts its origin without
-        credentials. Limits: 8 MiB, 40 million pixels, 10 seconds.
+      <section class="acquire" aria-labelledby="acquire-heading">
+        <h2 id="acquire-heading">Choose an image</h2>
+        <label class="file-label" for="file"
+          ><span>Open a local image</span
+          ><span class="file-hint">PNG, JPEG, WebP, GIF or BMP · up to 8 MiB</span></label
+        >
+        <input
+          id="file"
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,.bmp"
+          aria-describedby="local-help"
+        />
+        <p class="small" id="local-help">
+          Processed on your device. No upload or page permission needed.
+        </p>
+        <div class="divider"><span>or select from this page</span></div>
+        <button id="discover" class="secondary" type="button">
+          Discover page images <span aria-hidden="true">↗</span>
+        </button>
+        <p class="small">
+          Invoke MediaAuth from the browser toolbar first. Eligible page assets must share the
+          page’s origin.
+        </p>
+      </section>
+      <p id="status" role="status" aria-live="polite">Ready when you are.</p>
+      <ul id="candidates" aria-label="Discovered images"></ul>
+      <div class="report-toolbar">
+        <h2>Evidence report</h2>
+        <button id="clear" type="button" class="text-button">Clear session</button>
+      </div>
+      <section id="empty" class="empty">
+        <span aria-hidden="true">◎</span>
+        <p>Your report starts here.</p>
+        <p class="small">Select an image to see what was observed and what remains unknown.</p>
+      </section>
+      <section id="report" aria-label="Completed image inspection" hidden>
+        <div class="conclusion">
+          <p class="eyebrow">ASSESSMENT</p>
+          <h2 id="verdict"></h2>
+          <p id="summary"></p>
+        </div>
+        <dl id="facts"></dl>
+        <section class="identity">
+          <h3>SHA-256 identity</h3>
+          <code id="hash"></code>
+          <p class="small">
+            Identifies these exact bytes. It does not establish origin or authenticity.
+          </p>
+        </section>
+        <h2 class="section-heading">What the evidence says</h2>
+        <div id="evidence"></div>
+        <details class="limitations">
+          <summary>Scope &amp; limitations</summary>
+          <ul id="limitations"></ul>
+        </details>
+        <details class="raw">
+          <summary>View structured JSON</summary>
+          <pre id="result" tabindex="0" aria-label="Structured analysis result"></pre>
+        </details>
+      </section>
+      <button id="export" type="button" disabled>
+        Download JSON report <span aria-hidden="true">↓</span>
+      </button>
+      <p class="small export-note">
+        Only when you choose. Reports may contain a filename; raw media bytes are never included.
       </p>
+      <footer>
+        <strong>Evidence before conclusions.</strong>
+        <p>
+          This release does not verify provenance or detect AI generation, watermarks, or
+          manipulation. Unavailable evidence is not proof of authenticity.
+        </p>
+        <p>
+          No telemetry or saved history. Selecting a page asset contacts its origin without
+          credentials. Limits: 8 MiB, 40 million pixels, 10-second acquisition.
+        </p>
+      </footer>
     </main>
   </body>
 </html>

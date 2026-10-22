@@ -35,3 +35,5 @@ The fourth Phase 1 increment adds a [reproducible cross-format adversarial corpu
 The fifth Phase 1 increment adds bounded uncompressed 24-bit BI_RGB BMP probing and CLI inspection, with top-down/bottom-up fixtures, independent pixel checks, and expanded mutation coverage; see [ADR 0007](docs/adr/0007-24-bit-bmp-probe.md). Other BMP variants, decoding, and metadata interpretation remain deferred. Phase 1 remains incomplete; this does not start Phase 2.
 
 The sixth Phase 1 increment adds [seeded probe stress](docs/PROBE_STRESS.md): bounded multi-edit mutations, independent case replay, guarded reads, and a test-worker deadline across all five formats. This advances adversarial execution evidence; it does not complete Phase 1, implement production isolation, or begin metadata intelligence.
+
+The local image-inspection release brings the five existing format subsets to the extension, adds explicit local files, readable evidence reports, JSON export, and session clearing. It connects existing analysis to a usable client; metadata intelligence and genuine authenticity/provenance analyzers remain later phases. See [release workflow](GETTING_STARTED.md).

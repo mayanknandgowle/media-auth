@@ -1,7 +1,9 @@
 import type { AnalysisResult } from '@media-auth/core';
 
 export type PanelRequest =
-  { readonly kind: 'DISCOVER' } | { readonly kind: 'ANALYZE'; readonly selectionKey: string };
+  | { readonly kind: 'DISCOVER' }
+  | { readonly kind: 'CLEAR' }
+  | { readonly kind: 'ANALYZE'; readonly selectionKey: string };
 export interface ImageCandidate {
   readonly selectionKey: string;
   readonly label: string;
@@ -9,6 +11,7 @@ export interface ImageCandidate {
   readonly reason?: string;
 }
 export type PanelResponse =
+  | { readonly kind: 'CLEARED' }
   | { readonly kind: 'DISCOVERED'; readonly candidates: readonly ImageCandidate[] }
   | { readonly kind: 'ANALYZED'; readonly result: AnalysisResult }
   | { readonly kind: 'ERROR'; readonly message: string };
@@ -21,7 +24,8 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 export function parsePanelRequest(value: unknown): PanelRequest | undefined {
   if (!isRecord(value)) return undefined;
   const keys = Object.keys(value);
-  if (value.kind === 'DISCOVER' && keys.length === 1) return { kind: 'DISCOVER' };
+  if ((value.kind === 'DISCOVER' || value.kind === 'CLEAR') && keys.length === 1)
+    return { kind: value.kind };
   if (
     value.kind === 'ANALYZE' &&
     keys.length === 2 &&

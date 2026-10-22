@@ -1,4 +1,4 @@
-/* global chrome */
+/* global chrome, document, window */
 import assert from 'node:assert/strict';
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -9,13 +9,15 @@ import { fixtureServer } from './serve-fixture.mjs';
 // Browser automation cannot grant activeTab or reliably drive Chromium's native toolbar.
 // Verify the production manifest separately, then use an explicitly disclosed,
 // disposable loopback host grant to exercise the unchanged production UI and worker.
-const extensionPath = resolve('apps/extension/dist');
+const extensionPath = resolve(process.env.MEDIAAUTH_EXTENSION_PATH ?? 'apps/extension/dist');
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'media-auth-extension-smoke-'));
 const contexts = [];
 const server = fixtureServer();
 let imageRequests = 0;
+let allImageRequests = 0;
 server.on('request', (request) => {
   if (request.url === '/known.png') imageRequests++;
+  if (/\.(png|jpg|webp|gif|bmp)$/.test(request.url ?? '')) allImageRequests++;
 });
 await new Promise((resolveListen, reject) => {
   server.once('error', reject);
@@ -65,8 +67,87 @@ try {
   const productionPages = await openFixtureAndPanel(production.context, production.panelUrl);
   await productionPages.panel.locator('#discover').evaluate((button) => button.click());
   await expect(productionPages.panel.locator('#status')).toContainText('toolbar');
+  const localPanel = productionPages.panel;
+  const errors = [];
+  localPanel.on('pageerror', (error) => errors.push(error.message));
+  const beforeLocal = allImageRequests;
+  for (const [name, mime] of [
+    ['known.png', 'image/png'],
+    ['baseline.jpg', 'image/jpeg'],
+    ['progressive.jpg', 'image/jpeg'],
+    ['lossy.webp', 'image/webp'],
+    ['lossless.webp', 'image/webp'],
+    ['alpha.webp', 'image/webp'],
+    ['single87.gif', 'image/gif'],
+    ['transparent-interlaced.gif', 'image/gif'],
+    ['rgb24-bottom-up.bmp', 'image/bmp'],
+    ['rgb24-top-down.bmp', 'image/bmp'],
+  ]) {
+    await localPanel.locator('#file').setInputFiles(resolve('tests/fixtures', name));
+    await expect(localPanel.locator('#facts')).toContainText(name);
+    await expect(localPanel.locator('#status')).toContainText('Local analysis complete');
+    await expect(localPanel.locator('#evidence .evidence-card')).toHaveCount(7);
+    const local = JSON.parse(await localPanel.locator('#result').textContent());
+    assert.equal(local.media.mimeType, mime);
+    assert.equal(local.media.source.acquisition, 'LOCAL_FILE');
+    assert.equal(local.conclusion.verdict, 'INCONCLUSIVE');
+  }
+  assert.equal(allImageRequests, beforeLocal, 'Local inspection must not fetch page/media URLs.');
+  const downloadPromise = localPanel.waitForEvent('download');
+  await localPanel.locator('#export').click();
+  const download = await downloadPromise;
+  const downloadPath = await download.path();
+  assert.ok(downloadPath);
+  assert.deepEqual(
+    JSON.parse(await readFile(downloadPath, 'utf8')),
+    JSON.parse(await localPanel.locator('#result').textContent()),
+  );
+  assert.equal(download.suggestedFilename(), 'mediaauth-report.json');
+  await localPanel.locator('#clear').click();
+  await expect(localPanel.locator('#status')).toContainText('Session cleared');
+  await expect(localPanel.locator('#export')).toBeDisabled();
+  assert.equal(await localPanel.locator('#result').textContent(), '');
+  await localPanel.locator('#file').setInputFiles({
+    name: '<img onerror=alert(1)>.png',
+    mimeType: 'image/png',
+    buffer: await readFile('tests/fixtures/known.png'),
+  });
+  await expect(localPanel.locator('#facts')).toContainText('<img onerror=alert(1)>.png');
+  assert.equal(await localPanel.locator('#facts img').count(), 0);
+  await localPanel.locator('#file').setInputFiles({
+    name: 'invalid.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('<svg></svg>'),
+  });
+  await expect(localPanel.locator('#status')).toContainText('supported');
+  await expect(localPanel.locator('#export')).toBeDisabled();
+  await expect(localPanel.locator('#report')).toBeHidden();
+  await localPanel.locator('#file').setInputFiles({
+    name: 'large.png',
+    mimeType: 'image/png',
+    buffer: Buffer.alloc(8 * 1024 * 1024 + 1),
+  });
+  await expect(localPanel.locator('#status')).toContainText('8 MiB');
+  await localPanel.locator('#file').setInputFiles('tests/fixtures/known.png');
+  await expect(localPanel.locator('#status')).toContainText('Local analysis complete');
+  await mkdir('test-results', { recursive: true });
+  await localPanel.setViewportSize({ width: 320, height: 900 });
+  assert.ok(
+    await localPanel.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    'Narrow panel must not overflow horizontally.',
+  );
+  await localPanel.screenshot({
+    path: 'test-results/image-inspector-local-320.png',
+    fullPage: true,
+  });
+  await localPanel.setViewportSize({ width: 640, height: 900 });
+  await localPanel.screenshot({
+    path: 'test-results/image-inspector-local-640.png',
+    fullPage: true,
+  });
+  assert.deepEqual(errors, []);
   console.log(
-    'PASS: production MV3 extension loads, Side Panel configuration is valid, and page access is rejected without an activeTab grant.',
+    'PASS: production MV3 loads, page access requires a grant, all ten fixtures inspect locally without activeTab, JSON download/clear/errors and narrow layouts work.',
   );
   await production.context.close();
 
@@ -96,7 +177,7 @@ try {
     beforeDiscovery + 1,
     'Only the selected media asset should be fetched.',
   );
-  const report = JSON.parse(await panel.locator('#result').innerText());
+  const report = JSON.parse(await panel.locator('#result').textContent());
   assert.equal(report.media.source.acquisition, 'ORIGINAL_WEB_ASSET');
   assert.equal(report.media.mimeType, 'image/png');
   assert.equal(report.conclusion.verdict, 'INCONCLUSIVE');
@@ -129,8 +210,38 @@ try {
     .getByRole('button', { name: 'Analyze Known blue PNG fixture' })
     .evaluate((button) => button.click());
   await expect(panel.locator('#status')).toContainText('page changed');
+  await fixture.goto(`${fixtureUrl}gallery`);
+  await fixture.bringToFront();
+  const beforeGallery = allImageRequests;
+  await panel.locator('#discover').evaluate((button) => button.click());
+  await expect(panel.locator('#status')).toContainText('10 image(s) discovered');
+  assert.equal(allImageRequests, beforeGallery, 'Gallery discovery must not fetch any asset.');
+  for (const name of [
+    'known.png',
+    'baseline.jpg',
+    'progressive.jpg',
+    'lossy.webp',
+    'lossless.webp',
+    'alpha.webp',
+    'single87.gif',
+    'transparent-interlaced.gif',
+    'rgb24-bottom-up.bmp',
+    'rgb24-top-down.bmp',
+  ]) {
+    const count = allImageRequests;
+    await panel
+      .getByRole('button', { name: `Analyze ${name}`, exact: true })
+      .evaluate((button) => button.click());
+    await expect(panel.locator('#status')).toContainText('Local analysis complete');
+    const pageReport = JSON.parse(await panel.locator('#result').textContent());
+    assert.equal(pageReport.media.source.acquisition, 'ORIGINAL_WEB_ASSET');
+    assert.equal(allImageRequests, count + 1, 'Each selection must acquire exactly one asset.');
+  }
+  await panel.locator('#clear').evaluate((button) => button.click());
+  await expect(panel.locator('#status')).toContainText('Session cleared');
+  assert.equal(await panel.locator('#candidates button').count(), 0);
   console.log(
-    'PASS: unchanged production panel and worker discover, select, acquire, analyze, and render the known PNG in Chromium using a disposable loopback-only host grant; stale selections are rejected.',
+    'PASS: production panel/worker discover and inspect all ten page fixtures with a disposable loopback grant; only selected assets are acquired, stale selections are rejected, and clear forgets candidates.',
   );
   console.log(
     'NOT VERIFIED: native toolbar activation, the real activeTab grant, and native Side Panel hosting. Complete the manual procedure in apps/extension/README.md.',

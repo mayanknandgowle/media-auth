@@ -3,7 +3,21 @@ import { readFile } from 'node:fs/promises';
 const routes = new Map([
   ['/', ['tests/fixtures/index.html', 'text/html; charset=utf-8']],
   ['/known.png', ['tests/fixtures/known.png', 'image/png']],
+  ['/gallery', ['tests/fixtures/gallery.html', 'text/html; charset=utf-8']],
 ]);
+// Explicit original assets only. Never map a request path to arbitrary filesystem access.
+for (const [name, mime] of [
+  ['baseline.jpg', 'image/jpeg'],
+  ['progressive.jpg', 'image/jpeg'],
+  ['lossy.webp', 'image/webp'],
+  ['lossless.webp', 'image/webp'],
+  ['alpha.webp', 'image/webp'],
+  ['single87.gif', 'image/gif'],
+  ['transparent-interlaced.gif', 'image/gif'],
+  ['rgb24-bottom-up.bmp', 'image/bmp'],
+  ['rgb24-top-down.bmp', 'image/bmp'],
+])
+  routes.set(`/${name}`, [`tests/fixtures/${name}`, mime]);
 export function fixtureServer() {
   return createServer(async (request, response) => {
     const route = routes.get(request.url);

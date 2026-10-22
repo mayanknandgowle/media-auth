@@ -4,6 +4,20 @@ import { SelectionRegistry } from './selection.js';
 import { analyzeAcquiredImage, createWorkflow, type BrowserPort } from './workflow.js';
 
 describe('extension pipeline integration', () => {
+  it('forgets registered page selections without needing page access', async () => {
+    const registry = new SelectionRegistry(() => 'session');
+    registry.register(1, 'doc', {
+      pageUrl: 'https://example.test/',
+      images: [{ url: 'https://example.test/x.png', label: 'x' }],
+    });
+    const activeTab = vi.fn(async () => {
+      throw new Error('No page access');
+    });
+    const request = createWorkflow({ activeTab, discover: vi.fn(), acquire: vi.fn() }, registry);
+    expect(await request({ kind: 'CLEAR' })).toEqual({ kind: 'CLEARED' });
+    expect(activeTab).not.toHaveBeenCalled();
+    expect(() => registry.select('session-0', 1, 'https://example.test/')).toThrow();
+  });
   it('requires a discovered selection, acquires only that asset, and produces honest evidence', async () => {
     const fixture = new Uint8Array(
       await readFile(new URL('../../../tests/fixtures/known.png', import.meta.url)),

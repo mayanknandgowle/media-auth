@@ -5,6 +5,7 @@ import { SelectionRegistry } from './selection.js';
 describe('extension message boundary', () => {
   it('accepts only exact, bounded messages with opaque selection keys', () => {
     expect(parsePanelRequest({ kind: 'DISCOVER' })).toEqual({ kind: 'DISCOVER' });
+    expect(parsePanelRequest({ kind: 'CLEAR' })).toEqual({ kind: 'CLEAR' });
     expect(parsePanelRequest({ kind: 'ANALYZE', selectionKey: 'session-0' })).toEqual({
       kind: 'ANALYZE',
       selectionKey: 'session-0',
@@ -14,6 +15,7 @@ describe('extension message boundary', () => {
       [],
       'DISCOVER',
       { kind: 'DISCOVER', url: 'https://example.com' },
+      { kind: 'CLEAR', selectionKey: 'session-0' },
       { kind: 'ANALYZE', url: 'https://example.com' },
       { kind: 'ANALYZE', selectionKey: 'x'.repeat(101) },
       { kind: 'ANALYZE', selectionKey: 'file:///secret' },
