@@ -7,7 +7,13 @@ import assert from 'node:assert/strict';
 const browser = await chromium.launch({ channel: 'chromium', headless: true });
 try {
   const page = await browser.newPage();
-  for (const name of ['lossy.webp', 'lossless.webp', 'alpha.webp']) {
+  for (const name of [
+    'lossy.webp',
+    'lossless.webp',
+    'alpha.webp',
+    'metadata/exif-little.webp',
+    'metadata/exif-big.webp',
+  ]) {
     const bytes = await readFile(new URL(`../tests/fixtures/${name}`, import.meta.url));
     const result = await page.evaluate(async (base64) => {
       const image = new Image();
@@ -24,16 +30,20 @@ try {
         pixels: Array.from(context.getImageData(0, 0, image.width, image.height).data),
       };
     }, bytes.toString('base64'));
+    // This pinned Chromium renders raw-TIFF WebP EXIF at encoded dimensions.
+    // Recorded orientation is independently verified as metadata, not inferred from rendering.
     assert.equal(result.width, 16);
     assert.equal(result.height, 8);
     const alpha = name === 'alpha.webp' ? 128 : 255;
-    const tolerance = name === 'lossless.webp' ? 0 : 2;
+    const tolerance = name === 'lossless.webp' || name.startsWith('metadata/') ? 0 : 2;
     assert.ok(
       result.pixels.every((value, i) =>
         i % 4 === 3 ? value === alpha : Math.abs(value - 128) <= tolerance,
       ),
     );
-    console.log(`${name}: decoded 16x8; gray 128 +/- ${tolerance}, alpha ${alpha}`);
+    console.log(
+      `${name}: decoded ${result.width}x${result.height}; gray 128 +/- ${tolerance}, alpha ${alpha}`,
+    );
   }
   console.log(`Decoder: Chromium ${browser.version()}`);
 } finally {

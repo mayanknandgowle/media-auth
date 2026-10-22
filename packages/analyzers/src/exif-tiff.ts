@@ -25,7 +25,7 @@ export function readExifTiff(
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   function range(offset: number, length: number) {
     if (!Number.isSafeInteger(offset) || offset < 0 || offset > bytes.length - length)
-      invalidExif('EXIF offset or field extends beyond its APP1 block.');
+      invalidExif('EXIF offset or field extends beyond its payload.');
   }
   range(0, 8);
   const order = String.fromCharCode(bytes[0] ?? 0, bytes[1] ?? 0);

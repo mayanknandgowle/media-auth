@@ -64,7 +64,7 @@ describe('CLI commands', () => {
         throw new Error('Expected image analysis.');
       expect(
         inspected.output.analyzers.filter((analyzer) => analyzer.status === 'UNAVAILABLE'),
-      ).toHaveLength(mimeType === 'image/jpeg' ? 5 : 6);
+      ).toHaveLength(['image/jpeg', 'image/webp'].includes(mimeType) ? 6 : 7);
       expect(inspected.output.conclusion.verdict).toBe('INCONCLUSIVE');
       expect(inspected.output.evidence.find((item) => item.category === 'METADATA')).toMatchObject({
         source: { id: 'media-auth.container-metadata', version: '0.5.0' },
@@ -90,7 +90,7 @@ describe('CLI commands', () => {
     },
   );
 
-  it.each(['exif-little.jpg', 'exif-big.jpg'])(
+  it.each(['exif-little.jpg', 'exif-big.jpg', 'exif-little.webp', 'exif-big.webp'])(
     'keeps %s probe-only output separate from recorded EXIF inspection',
     async (name) => {
       const path = fileURLToPath(
@@ -110,9 +110,8 @@ describe('CLI commands', () => {
       const inspected = await executeCommand(['inspect', path]);
       if (inspected.exitCode !== 0 || !('evidence' in inspected.output))
         throw new Error('Expected report');
-      expect(
-        inspected.output.evidence.find((e) => e.source.id === 'media-auth.jpeg-exif'),
-      ).toMatchObject({
+      const analyzerId = name.endsWith('.jpg') ? 'media-auth.jpeg-exif' : 'media-auth.webp-exif';
+      expect(inspected.output.evidence.find((e) => e.source.id === analyzerId)).toMatchObject({
         status: 'DETECTED',
         details: {
           kind: 'RECORDED',
@@ -131,17 +130,17 @@ describe('CLI commands', () => {
         verdict: 'INCONCLUSIVE',
         origin: 'UNKNOWN',
       });
-      // Corrupt only TIFF magic: valid JPEG framing, unusable selected metadata.
+      // Corrupt only TIFF magic: valid container framing, unusable selected metadata.
       const bytes = await readFile(path);
-      bytes.writeUInt16LE(43, 14);
-      const malformed = join(temporaryDirectory, 'bad-exif.jpg');
+      bytes.writeUInt16LE(43, name.endsWith('.jpg') ? 14 : 66);
+      const malformed = join(temporaryDirectory, 'bad-exif.bin');
       await writeFile(malformed, bytes);
       const result = await executeCommand(['inspect', malformed]);
       if (result.exitCode !== 0 || !('evidence' in result.output))
         throw new Error('Expected report');
-      expect(
-        result.output.evidence.find((e) => e.source.id === 'media-auth.jpeg-exif'),
-      ).toMatchObject({ status: 'INCONCLUSIVE' });
+      expect(result.output.evidence.find((e) => e.source.id === analyzerId)).toMatchObject({
+        status: 'INCONCLUSIVE',
+      });
       expect(result.output.evidence.find((e) => e.category === 'EXACT_IDENTITY')).toHaveProperty(
         'status',
         'DETECTED',

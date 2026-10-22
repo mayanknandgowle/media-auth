@@ -43,6 +43,11 @@ for (const [command, prefix] of entries) {
       'b3504616bcf37c51c6e6cbf5630a2f49adbf62acb61c6338371d4b17e1eeaeca',
     ],
     ['metadata/exif-big.jpg', 'b9f6c769bc8890fac5d9c6addb83f1123cf082898f31233826cd10d8ad88e459'],
+    [
+      'metadata/exif-little.webp',
+      'e4502e792dffeadc50ae5558ae1629e174be33e60172ae3a3ed81cda3689872f',
+    ],
+    ['metadata/exif-big.webp', '1bf903d607cee3c0daec9e0e7d34fc7b273bb669c26950f3256eb86fce7d7b49'],
     ['lossy.webp', 'fc3927eee0346e9c0ac714b66e4d157b7b5e15d1d1825e5f7ee301e9ea1a6d7a'],
     ['lossless.webp', 'f06216831f617441ac07a9fe1f8d49f91e62526b971eee3c06933b75a3411284'],
     ['alpha.webp', '3fa682dc8d44a3252ace27090c81b2a72e5e67ba64332c0867ea84ea5f25bd38'],
@@ -73,14 +78,16 @@ for (const [command, prefix] of entries) {
     assert.equal(analysis.conclusion.verdict, 'INCONCLUSIVE');
     assert.equal(
       analysis.analyzers.filter((item) => item.status === 'UNAVAILABLE').length,
-      name.endsWith('.jpg') ? 5 : 6,
+      name.endsWith('.jpg') || name.endsWith('.webp') ? 6 : 7,
     );
-    const exif = analysis.evidence.find((item) => item.source.id === 'media-auth.jpeg-exif');
+    const exif = analysis.evidence.find(
+      (item) => item.source.id === `media-auth.${name.endsWith('.webp') ? 'webp' : 'jpeg'}-exif`,
+    );
     assert.equal(
       exif.status,
       name.startsWith('metadata/')
         ? 'DETECTED'
-        : name.endsWith('.jpg')
+        : name.endsWith('.jpg') || name.endsWith('.webp')
           ? 'NOT_DETECTED'
           : 'UNAVAILABLE',
     );

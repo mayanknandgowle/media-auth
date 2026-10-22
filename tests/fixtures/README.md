@@ -35,6 +35,17 @@ Regenerate explicitly with `node scripts/generate-exif-fixtures.mjs`; ordinary c
 
 ## WebP fixtures
 
+### Recorded WebP EXIF
+
+`metadata/exif-little.webp` and `metadata/exif-big.webp` contain the same original synthetic nine EXIF fields described above, as raw classic TIFF in an EXIF chunk. They preserve the original lossless WebP pixels, add VP8X with the EXIF flag, and use no downloaded media or real device data. Apache-2.0 applies. They are separate from the ten probe seeds.
+
+| File                        | Bytes | SHA-256                                                            |
+| --------------------------- | ----- | ------------------------------------------------------------------ |
+| `metadata/exif-little.webp` | 334   | `e4502e792dffeadc50ae5558ae1629e174be33e60172ae3a3ed81cda3689872f` |
+| `metadata/exif-big.webp`    | 334   | `1bf903d607cee3c0daec9e0e7d34fc7b273bb669c26950f3256eb86fce7d7b49` |
+
+Regenerate explicitly with `node scripts/generate-webp-exif-fixtures.mjs` using the checked-in lossless WebP and JPEG metadata seeds. Chromium fixture verification checks all pixels at 16 × 8; this pinned decoder does not apply raw-TIFF WebP orientation. Supplemental Pillow verifies the recorded orientation 6/1 and other fields independently. Fixed `/metadata/*.webp` routes and explicit local/page browser tests exercise both fixtures. Compatibility-prefix cases are synthetic in-memory test mutations, not additional claimed standard fixtures.
+
 `lossy.webp`, `lossless.webp`, and `alpha.webp` are original generated 16 × 8 gray images, from constant RGBA canvas pixels (128,128,128,255), or alpha 128 for `alpha.webp`. They use the repository's Apache-2.0 license and contain no downloaded media or private information. The alpha fixture includes Chromium's generated color profile; it is not interpreted by the probe.
 
 | File            | Bytes | SHA-256                                                            |

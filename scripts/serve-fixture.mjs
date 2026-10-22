@@ -11,6 +11,8 @@ for (const [name, mime] of [
   ['progressive.jpg', 'image/jpeg'],
   ['metadata/exif-little.jpg', 'image/jpeg'],
   ['metadata/exif-big.jpg', 'image/jpeg'],
+  ['metadata/exif-little.webp', 'image/webp'],
+  ['metadata/exif-big.webp', 'image/webp'],
   ['lossy.webp', 'image/webp'],
   ['lossless.webp', 'image/webp'],
   ['alpha.webp', 'image/webp'],

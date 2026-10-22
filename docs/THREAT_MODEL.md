@@ -51,6 +51,8 @@ Use division before multiplying padded stride by absolute height; do not use bit
 
 Cancellation in core is cooperative. A promise timeout cannot stop an in-process analyzer, and no hard timeout is claimed. Untrusted third-party analyzers must not be loaded until an isolation protocol and enforcement mechanism exist. Remote opt-in is a capability gate for trusted adapters, not a network sandbox.
 
+The separate WebP EXIF analyzer scans the exact RIFF extent with independent chunk/payload/padding/flag checks before allocating at most one 64 KiB EXIF payload. Common range access and evidence mapping preserve JPEG semantics and the TIFF field bounds. No pixels, alpha, profile data or unknown payloads are decoded. A compatibility prefix is disclosed. Missing EXIF is not authenticity; see [ADR 0011](adr/0011-static-webp-exif.md).
+
 ## Tests and review
 
 The JPEG EXIF analyzer independently validates limits and byte access. It bounds one pre-scan APP1 allocation, 4 KiB requests, markers/fill bytes, two directories, entry counts and text length; offsets are checked before access. Overlap/cycles, duplicates and malformed selected fields discard partial observations. Unknown payloads and GPS/owner/serial, maker notes, thumbnails and next-IFD graphs are never followed. Recorded dates, camera/software and orientation are attacker-controlled strings/numbers, rendered as text and never promoted to provenance/authenticity. Missing pre-scan EXIF does not establish absence of all metadata. Exports can disclose selected recorded fields; see [ADR 0010](adr/0010-bounded-jpeg-exif.md).

@@ -24,6 +24,10 @@ const hash = element('#hash', HTMLElement);
 const verdict = element('#verdict', HTMLHeadingElement);
 let busy = false;
 let currentReport: ReportView | undefined;
+const exifTitles = new Map([
+  ['media-auth.jpeg-exif', 'JPEG EXIF fields'],
+  ['media-auth.webp-exif', 'WebP EXIF fields'],
+]);
 
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, text: string) {
   const value = document.createElement(tag);
@@ -71,12 +75,7 @@ function showReport(value: unknown) {
     );
     badge.className = item.status === 'DETECTED' ? 'badge observed' : 'badge';
     top.append(
-      node(
-        'h3',
-        item.source.id === 'media-auth.jpeg-exif'
-          ? 'JPEG EXIF fields'
-          : (categoryLabels[item.category] ?? item.category),
-      ),
+      node('h3', exifTitles.get(item.source.id) ?? categoryLabels[item.category] ?? item.category),
       badge,
     );
     card.append(top, node('p', item.explanation));
@@ -94,7 +93,7 @@ function showReport(value: unknown) {
     card.append(attribution);
     if (item.status === 'DETECTED') {
       if (
-        item.source.id === 'media-auth.jpeg-exif' &&
+        exifTitles.has(item.source.id) &&
         isRecord(item.details) &&
         Array.isArray(item.details.observations)
       ) {
