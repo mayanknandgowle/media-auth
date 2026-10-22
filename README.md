@@ -31,6 +31,8 @@ Workspace packages expose TypeScript source to the internal build and test tools
 
 `npm run test:corpus` runs the [cross-format adversarial corpus](docs/PROBE_CORPUS.md): named malformed/budget cases and deterministic mutations of all ten PNG/JPEG/WebP/GIF/BMP fixtures, checked through guarded range adapters. It is included in the full check. This finite regression sweep does not establish full format conformance or exhaustively test parser security.
 
+`npm run stress:probes -- --seed 1 --iterations 2000` runs a bounded, repeatable multi-edit campaign across all five formats. Use `--seed 1 --case 37` to replay one case. A parent worker deadline catches hangs; this is test containment, not production sandboxing. See [seeded stress testing](docs/PROBE_STRESS.md).
+
 ## CLI
 
 ```sh

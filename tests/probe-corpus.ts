@@ -1,29 +1,10 @@
-import { readFileSync } from 'node:fs';
 import { crc32 } from 'node:zlib';
 import type { MediaProbe, ResourceLimits } from '@media-auth/core';
-import { pngProbe, jpegProbe, webpProbe, gifProbe, bmpProbe } from '@media-auth/media';
+import { pngProbe, jpegProbe, webpProbe, gifProbe } from '@media-auth/media';
 
-export const seeds = [
-  { name: 'rgb24-bottom-up.bmp', probe: bmpProbe, mimeType: 'image/bmp', width: 3, height: 2 },
-  { name: 'rgb24-top-down.bmp', probe: bmpProbe, mimeType: 'image/bmp', width: 3, height: 2 },
-  { name: 'known.png', probe: pngProbe, mimeType: 'image/png', width: 1, height: 1 },
-  { name: 'baseline.jpg', probe: jpegProbe, mimeType: 'image/jpeg', width: 16, height: 8 },
-  { name: 'progressive.jpg', probe: jpegProbe, mimeType: 'image/jpeg', width: 16, height: 8 },
-  { name: 'lossy.webp', probe: webpProbe, mimeType: 'image/webp', width: 16, height: 8 },
-  { name: 'lossless.webp', probe: webpProbe, mimeType: 'image/webp', width: 16, height: 8 },
-  { name: 'alpha.webp', probe: webpProbe, mimeType: 'image/webp', width: 16, height: 8 },
-  { name: 'single87.gif', probe: gifProbe, mimeType: 'image/gif', width: 16, height: 8 },
-  {
-    name: 'transparent-interlaced.gif',
-    probe: gifProbe,
-    mimeType: 'image/gif',
-    width: 16,
-    height: 8,
-  },
-].map((seed) => ({
-  ...seed,
-  bytes: readFileSync(new URL(`./fixtures/${seed.name}`, import.meta.url)),
-}));
+import { loadProbeSeeds } from './probe-seeds.js';
+
+export const seeds = loadProbeSeeds(new URL('./fixtures/', import.meta.url));
 
 export interface CorpusCase {
   name: string;

@@ -33,3 +33,5 @@ The third Phase 1 increment adds bounded single-image GIF87a/GIF89a probing and 
 The fourth Phase 1 increment adds a [reproducible cross-format adversarial corpus](docs/PROBE_CORPUS.md) and fixes demonstrated PNG/CLI read-budget gaps. It advances parser-budget evidence across all four formats. The finite mutation suite does not complete the broader format/corpus work or replace sustained fuzzing; metadata intelligence remains a separate phase.
 
 The fifth Phase 1 increment adds bounded uncompressed 24-bit BI_RGB BMP probing and CLI inspection, with top-down/bottom-up fixtures, independent pixel checks, and expanded mutation coverage; see [ADR 0007](docs/adr/0007-24-bit-bmp-probe.md). Other BMP variants, decoding, and metadata interpretation remain deferred. Phase 1 remains incomplete; this does not start Phase 2.
+
+The sixth Phase 1 increment adds [seeded probe stress](docs/PROBE_STRESS.md): bounded multi-edit mutations, independent case replay, guarded reads, and a test-worker deadline across all five formats. This advances adversarial execution evidence; it does not complete Phase 1, implement production isolation, or begin metadata intelligence.

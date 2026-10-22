@@ -58,3 +58,7 @@ Tests cover malformed/truncated/CRC-invalid PNGs, malformed/truncated JPEG frame
 Before adding a format, provider, remote service, or permission: identify new trust boundaries, add adversarial fixtures, define budgets, update documentation, and record any major decision. Do not add a user-supplied URL fetch API.
 
 The [cross-format corpus](PROBE_CORPUS.md) runs named errors, deterministic truncations/byte mutations, and concatenations with a guarded adapter. It detects out-of-range or over-budget requests and unexpected exceptions; explicit PNG CRC-boundary and CLI read-limit regressions cover demonstrated fixes. Its finite read ceiling is test-side instrumentation, not a production timeout or exhaustive security audit.
+
+## Test-only stress containment
+
+The [seeded stress runner](PROBE_STRESS.md) bounds generated input/edit/case counts and runs existing probes in a worker terminated by a parent deadline. Range-guard violations remain failures even if caught by the probe. V8 heap/stack caps are not total-memory limits and the worker is not a security sandbox. Generated cases are original synthetic bytes retained only in memory. No production execution, acquisition, permission, or privacy boundary changes; see [ADR 0008](adr/0008-test-only-probe-stress-worker.md).

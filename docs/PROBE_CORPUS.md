@@ -26,3 +26,5 @@ The CLI regression checks that the existing PNG fixture succeeds with a 40-byte 
 This is a finite deterministic regression sweep, not coverage-guided fuzzing, differential validation against complete decoders, a CPU/memory benchmark, or a security proof. It cannot interrupt arbitrary synchronous loops or a hung adapter; production cancellation/isolation remains separately designed work. Fixtures are small and synthetic. New findings should become minimized named recipes with explicit outcomes, provenance, and budgets. Sustained fuzzing and broader format diversity remain future work.
 
 The counts above include the [BMP increment](plans/2026-10-19-bmp-probe-cli.md). See the original [execution and validation record](plans/2026-10-19-probe-corpus-hardening.md) for observed local results and unverified remote/native-browser checks.
+
+The separate [seeded stress command](PROBE_STRESS.md) adds combined mutations, direct case replay, and a parent-enforced worker deadline. It shares the original fixture catalog in `tests/probe-seeds.ts`; the named corpus and its counts above are unchanged.
