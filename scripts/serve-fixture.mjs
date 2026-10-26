@@ -25,6 +25,8 @@ for (const [name, mime] of [
   ['metadata/xmp-elements.jpg', 'image/jpeg'],
   ['metadata/xmp-attributes.webp', 'image/webp'],
   ['metadata/xmp-elements.webp', 'image/webp'],
+  ['metadata/xmp-attributes.png', 'image/png'],
+  ['metadata/xmp-elements.png', 'image/png'],
   ['lossy.webp', 'image/webp'],
   ['lossless.webp', 'image/webp'],
   ['alpha.webp', 'image/webp'],

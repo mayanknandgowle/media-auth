@@ -30,6 +30,7 @@ const metadataCards = new Map([
   ['media-auth.png-exif', { title: 'PNG EXIF fields', format: 'EXIF' }],
   ['media-auth.jpeg-xmp', { title: 'JPEG XMP fields', format: 'XMP' }],
   ['media-auth.webp-xmp', { title: 'WebP XMP fields', format: 'XMP' }],
+  ['media-auth.png-xmp', { title: 'PNG XMP fields', format: 'XMP' }],
 ]);
 
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, text: string) {

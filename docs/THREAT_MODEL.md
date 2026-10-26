@@ -82,3 +82,7 @@ Report presentation applies JSON/evidence budgets, validates facts/hash encoding
 ## Static WebP XMP
 
 The WebP XMP adapter shares the RIFF scanner with EXIF while independently checking its selected chunk/flag. Exact extent, lengths/zero padding, unique metadata, static image presence and animation rejection precede payload parsing; later failures discard fields. A 65,504-byte project packet cap applies before allocation, alongside input/chunk/work and 4 KiB range bounds. The existing rejecting XML subset and no-network/entity policy apply unchanged. EXIF limits/semantics remain intact; broader reconstruction validation remains the media probe responsibility. No new dependency/permission or authenticity inference; see [ADR 0015](adr/0015-static-webp-xmp.md).
+
+## Uncompressed static PNG XMP
+
+The XMP adapter shares the static PNG CRC/framing scanner with EXIF, preserving EXIF semantics/work limits. XMP text keywords are recognized during bounded CRC reads and exact selected bytes retained, never reread. A 65,526-byte selected-chunk allocation cap includes the 22-byte header and 65,504-byte XML cap. Identification reads at most the first 4 KiB CRC block before allocation rejection; unknown text values are never retained/inflated. Compressed/legacy carriers, nonempty language/translation and ambiguous packets are inconclusive; no inflater is called. Late CRC/framing failures discard all XMP. Shared XML limits and external-entity/network rejection remain; no new dependency/permission/inference. See [ADR 0016](adr/0016-static-png-xmp.md).

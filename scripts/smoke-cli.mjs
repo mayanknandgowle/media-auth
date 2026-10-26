@@ -94,6 +94,14 @@ for (const [command, prefix] of entries) {
       'metadata/xmp-elements.webp',
       '7a0d604fbe00c06e78b5f54ab2f93b499be1d50f68fc062fe28c823b6eadcdcc',
     ],
+    [
+      'metadata/xmp-attributes.png',
+      '974dbacddeabacf379b0c2068ee7d8bc0e87f03fa922e0b6fdcadd6343a54c4c',
+    ],
+    [
+      'metadata/xmp-elements.png',
+      'e0249f3f654eeeb51889dadfe00f6afaf8a658af3c23451f7390ca98ebedcd34',
+    ],
     ['lossless.webp', 'f06216831f617441ac07a9fe1f8d49f91e62526b971eee3c06933b75a3411284'],
     ['alpha.webp', '3fa682dc8d44a3252ace27090c81b2a72e5e67ba64332c0867ea84ea5f25bd38'],
     ['single87.gif', '53bec4343a894b85430d2c4e31e221ea2ed0a46ee79bf1a0c0178b6290079bd7'],
@@ -125,11 +133,7 @@ for (const [command, prefix] of entries) {
     assert.equal(analysis.conclusion.verdict, 'INCONCLUSIVE');
     assert.equal(
       analysis.analyzers.filter((item) => item.status === 'UNAVAILABLE').length,
-      ['.jpg', '.webp'].some((extension) => name.endsWith(extension))
-        ? 8
-        : name.endsWith('.png')
-          ? 9
-          : 10,
+      ['.jpg', '.webp', '.png'].some((extension) => name.endsWith(extension)) ? 9 : 11,
     );
     const exif = analysis.evidence.find(
       (item) =>
@@ -165,6 +169,7 @@ for (const [command, prefix] of entries) {
     for (const [carrier, extension] of [
       ['jpeg', '.jpg'],
       ['webp', '.webp'],
+      ['png', '.png'],
     ]) {
       const xmp = analysis.evidence.find(
         (item) => item.source.id === 'media-auth.' + carrier + '-xmp',

@@ -139,7 +139,7 @@ describe('foundation composition', () => {
         result.evidence
           .filter((item) => item.status === 'NOT_DETECTED')
           .map((item) => item.source.id),
-      ).toEqual('handle' in media ? ['media-auth.png-exif'] : []);
+      ).toEqual('handle' in media ? ['media-auth.png-exif', 'media-auth.png-xmp'] : []);
     }
   });
 
@@ -181,6 +181,6 @@ describe('foundation composition', () => {
     expect(deferred.every((item) => item.status === 'UNAVAILABLE')).toBe(true);
     expect(
       first.evidence.filter((item) => item.status === 'NOT_DETECTED').map((item) => item.source.id),
-    ).toEqual(['media-auth.png-exif']);
+    ).toEqual(['media-auth.png-exif', 'media-auth.png-xmp']);
   });
 });

@@ -19,41 +19,47 @@ function selected(bytes: Uint8Array, size = bytes.length): SelectedFile {
 }
 
 describe('selected browser files', () => {
-  it.each(['xmp-attributes.jpg', 'xmp-elements.jpg', 'xmp-attributes.webp', 'xmp-elements.webp'])(
-    'exports selected local %s claims without mixing XMP with EXIF',
-    async (name) => {
-      const bytes = readFileSync(
-        new URL(`../../../tests/fixtures/metadata/${name}`, import.meta.url),
-      );
-      const report = await analyzeSelectedFile(selected(bytes));
-      const view = createReportView(report);
-      expect(
-        view.evidence.find(
-          (item) => item.source.id === `media-auth.${name.endsWith('.webp') ? 'webp' : 'jpeg'}-xmp`,
-        ),
-      ).toMatchObject({
-        status: 'DETECTED',
-        details: {
-          observations: expect.arrayContaining([
-            {
-              kind: 'RECORDED',
-              format: 'XMP',
-              field: 'creatorTool',
-              value: 'MediaAuth <fixture> & café 📷',
-            },
-          ]),
-        },
-      });
-      expect(
-        view.dimensionComparisons.has(
-          `media-auth.${name.endsWith('.webp') ? 'webp' : 'jpeg'}-xmp:recorded`,
-        ),
-      ).toBe(false);
-      expect(JSON.parse(view.json)).toEqual(report);
-      expect(report.media.dimensions).toEqual({ width: 16, height: 8 });
-      expect(report.conclusion.modification).toBe('UNKNOWN');
-    },
-  );
+  it.each([
+    'xmp-attributes.jpg',
+    'xmp-elements.jpg',
+    'xmp-attributes.webp',
+    'xmp-elements.webp',
+    'xmp-attributes.png',
+    'xmp-elements.png',
+  ])('exports selected local %s claims without mixing XMP with EXIF', async (name) => {
+    const bytes = readFileSync(
+      new URL(`../../../tests/fixtures/metadata/${name}`, import.meta.url),
+    );
+    const report = await analyzeSelectedFile(selected(bytes));
+    const view = createReportView(report);
+    expect(
+      view.evidence.find(
+        (item) =>
+          item.source.id ===
+          `media-auth.${name.endsWith('.png') ? 'png' : name.endsWith('.webp') ? 'webp' : 'jpeg'}-xmp`,
+      ),
+    ).toMatchObject({
+      status: 'DETECTED',
+      details: {
+        observations: expect.arrayContaining([
+          {
+            kind: 'RECORDED',
+            format: 'XMP',
+            field: 'creatorTool',
+            value: 'MediaAuth <fixture> & café 📷',
+          },
+        ]),
+      },
+    });
+    expect(
+      view.dimensionComparisons.has(
+        `media-auth.${name.endsWith('.png') ? 'png' : name.endsWith('.webp') ? 'webp' : 'jpeg'}-xmp:recorded`,
+      ),
+    ).toBe(false);
+    expect(JSON.parse(view.json)).toEqual(report);
+    expect(report.media.dimensions).toEqual({ width: 16, height: 8 });
+    expect(report.conclusion.modification).toBe('UNKNOWN');
+  });
   it.each(['jpg', 'webp', 'png'])(
     'exports %s dimension agreement and differences with separate labels',
     async (format) => {
@@ -101,11 +107,7 @@ describe('selected browser files', () => {
     });
     expect(report.conclusion.verdict).toBe('INCONCLUSIVE');
     expect(report.analyzers.filter((item) => item.status === 'UNAVAILABLE')).toHaveLength(
-      ['.jpg', '.webp'].some((extension) => name.endsWith(extension))
-        ? 8
-        : name.endsWith('.png')
-          ? 9
-          : 10,
+      ['.jpg', '.webp', '.png'].some((extension) => name.endsWith(extension)) ? 9 : 11,
     );
     const view = createReportView(report);
     expect(view.hash).toMatch(/^[a-f0-9]{64}$/);

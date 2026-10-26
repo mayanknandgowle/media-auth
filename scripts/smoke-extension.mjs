@@ -91,6 +91,8 @@ try {
     ['metadata/xmp-elements.jpg', 'image/jpeg'],
     ['metadata/xmp-attributes.webp', 'image/webp'],
     ['metadata/xmp-elements.webp', 'image/webp'],
+    ['metadata/xmp-attributes.png', 'image/png'],
+    ['metadata/xmp-elements.png', 'image/png'],
     ['lossy.webp', 'image/webp'],
     ['lossless.webp', 'image/webp'],
     ['alpha.webp', 'image/webp'],
@@ -102,7 +104,7 @@ try {
     await localPanel.locator('#file').setInputFiles(resolve('tests/fixtures', name));
     await expect(localPanel.locator('#facts')).toContainText(name.split('/').at(-1));
     await expect(localPanel.locator('#status')).toContainText('Local analysis complete');
-    await expect(localPanel.locator('#evidence .evidence-card')).toHaveCount(12);
+    await expect(localPanel.locator('#evidence .evidence-card')).toHaveCount(13);
     const local = JSON.parse(await localPanel.locator('#result').textContent());
     assert.equal(local.media.mimeType, mime);
     assert.equal(local.media.source.acquisition, 'LOCAL_FILE');
@@ -156,6 +158,7 @@ try {
     for (const [carrier, carrierMime, title] of [
       ['jpeg', 'image/jpeg', 'JPEG'],
       ['webp', 'image/webp', 'WebP'],
+      ['png', 'image/png', 'PNG'],
     ]) {
       const xmp = local.evidence.find(
         (item) => item.source.id === 'media-auth.' + carrier + '-xmp',
@@ -182,7 +185,7 @@ try {
     }
   }
   assert.equal(allImageRequests, beforeLocal, 'Local inspection must not fetch page/media URLs.');
-  await localPanel.locator('#file').setInputFiles('tests/fixtures/metadata/xmp-attributes.webp');
+  await localPanel.locator('#file').setInputFiles('tests/fixtures/metadata/xmp-attributes.png');
   await expect(localPanel.locator('#status')).toContainText('Local analysis complete');
   const downloadPromise = localPanel.waitForEvent('download');
   await localPanel.locator('#export').click();
@@ -219,7 +222,7 @@ try {
     buffer: Buffer.alloc(8 * 1024 * 1024 + 1),
   });
   await expect(localPanel.locator('#status')).toContainText('8 MiB');
-  await localPanel.locator('#file').setInputFiles('tests/fixtures/metadata/xmp-attributes.webp');
+  await localPanel.locator('#file').setInputFiles('tests/fixtures/metadata/xmp-attributes.png');
   await expect(localPanel.locator('#status')).toContainText('Local analysis complete');
   await mkdir('test-results', { recursive: true });
   await localPanel.setViewportSize({ width: 320, height: 900 });
@@ -238,7 +241,7 @@ try {
   });
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: production MV3 loads, page access requires a grant, twenty-six fixtures inspect locally without activeTab, recorded EXIF/XMP/comparisons stay text, JSON download/clear/errors and narrow layouts work.',
+    'PASS: production MV3 loads, page access requires a grant, twenty-eight fixtures inspect locally without activeTab, recorded EXIF/XMP/comparisons stay text, JSON download/clear/errors and narrow layouts work.',
   );
   await production.context.close();
 
@@ -328,7 +331,7 @@ try {
     assert.equal(pageReport.media.source.acquisition, 'ORIGINAL_WEB_ASSET');
     assert.equal(allImageRequests, count + 1, 'Each selection must acquire exactly one asset.');
   }
-  // Controlled same-origin DOM supplies sixteen fixed metadata fixture routes.
+  // Controlled same-origin DOM supplies eighteen fixed metadata fixture routes.
   await fixture.evaluate(async () => {
     document.body.replaceChildren();
     for (const name of [
@@ -348,6 +351,8 @@ try {
       'xmp-elements.jpg',
       'xmp-attributes.webp',
       'xmp-elements.webp',
+      'xmp-attributes.png',
+      'xmp-elements.png',
     ]) {
       const image = document.createElement('img');
       image.alt = name;
@@ -358,7 +363,7 @@ try {
   });
   const beforeMetadata = allImageRequests;
   await panel.locator('#discover').evaluate((button) => button.click());
-  await expect(panel.locator('#status')).toContainText('16 image(s) discovered');
+  await expect(panel.locator('#status')).toContainText('18 image(s) discovered');
   assert.equal(allImageRequests, beforeMetadata);
   for (const name of [
     'exif-little.jpg',
@@ -377,6 +382,8 @@ try {
     'xmp-elements.jpg',
     'xmp-attributes.webp',
     'xmp-elements.webp',
+    'xmp-attributes.png',
+    'xmp-elements.png',
   ]) {
     const before = allImageRequests;
     await panel
@@ -397,7 +404,10 @@ try {
     if (name.startsWith('xmp-')) {
       const xmp = metadata.evidence.find(
         (item) =>
-          item.source.id === 'media-auth.' + (name.endsWith('.webp') ? 'webp' : 'jpeg') + '-xmp',
+          item.source.id ===
+          'media-auth.' +
+            (name.endsWith('.png') ? 'png' : name.endsWith('.webp') ? 'webp' : 'jpeg') +
+            '-xmp',
       );
       assert.equal(xmp.status, 'DETECTED');
       await expect(panel.locator('#evidence')).toContainText('MediaAuth <fixture> & café 📷');
@@ -424,7 +434,7 @@ try {
   await expect(panel.locator('#status')).toContainText('Session cleared');
   assert.equal(await panel.locator('#candidates button').count(), 0);
   console.log(
-    'PASS: production panel/worker discover and inspect ten probe and sixteen metadata page fixtures with a disposable loopback grant; recorded EXIF/XMP preserve uncertainty, only selected assets are acquired, stale selections are rejected, and clear forgets candidates.',
+    'PASS: production panel/worker discover and inspect ten probe and eighteen metadata page fixtures with a disposable loopback grant; recorded EXIF/XMP preserve uncertainty, only selected assets are acquired, stale selections are rejected, and clear forgets candidates.',
   );
   console.log(
     'NOT VERIFIED: native toolbar activation, the real activeTab grant, and native Side Panel hosting. Complete the manual procedure in apps/extension/README.md.',

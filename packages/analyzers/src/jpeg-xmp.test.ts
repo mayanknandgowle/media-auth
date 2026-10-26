@@ -106,7 +106,7 @@ describe('bounded recorded JPEG XMP', () => {
         provenance: 'UNAVAILABLE',
         confidence: { kind: 'NOT_ASSESSED' },
       });
-      expect(report.analyzers).toHaveLength(12);
+      expect(report.analyzers).toHaveLength(13);
     },
   );
   it('keeps scoped absence, unsupported formats, missing ranges and I/O distinct', async () => {

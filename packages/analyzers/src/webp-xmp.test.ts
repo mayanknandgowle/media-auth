@@ -110,7 +110,7 @@ describe('bounded recorded static WebP XMP', () => {
       );
       expect(report.media.dimensions).toEqual({ width: 16, height: 8 });
       expect(report.media.metadataAvailability).toBe('NOT_PROBED');
-      expect(report.analyzers).toHaveLength(12);
+      expect(report.analyzers).toHaveLength(13);
       expect(report.conclusion).toMatchObject({
         verdict: 'INCONCLUSIVE',
         origin: 'UNKNOWN',

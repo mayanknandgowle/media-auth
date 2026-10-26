@@ -1,6 +1,6 @@
 # Privacy
 
-Selected JPEG/static WebP XMP creator-tool and three date strings are also displayed/exported, separately from EXIF. They may reveal sensitive software/time information and may be forged. Opaque author/GPS/title/history properties are not extracted; URLs/namespaces are never fetched. This bounded local parsing adds no telemetry, upload, retention or permissions. See [JPEG ADR 0014](docs/adr/0014-bounded-jpeg-xmp.md) and [WebP ADR 0015](docs/adr/0015-static-webp-xmp.md).
+Selected JPEG/static WebP/static PNG XMP creator-tool and three date strings are also displayed/exported, separately from EXIF. They may reveal sensitive software/time information and may be forged. Opaque author/GPS/title/history properties are not extracted; URLs/namespaces are never fetched. This bounded local parsing adds no telemetry, upload, retention or permissions. See [JPEG ADR 0014](docs/adr/0014-bounded-jpeg-xmp.md), [WebP ADR 0015](docs/adr/0015-static-webp-xmp.md) and [PNG ADR 0016](docs/adr/0016-static-png-xmp.md).
 
 Selected EXIF PixelXDimension/PixelYDimension claims are also displayed/exported. A separately labeled numeric comparison uses the probe's encoded dimensions without orientation. Missing values do not imply agreement; differences can reflect padding or historical metadata and establish no cause or authenticity. This adds no acquisition, upload or persistence. See [ADR 0013](docs/adr/0013-exif-dimension-comparison.md).
 

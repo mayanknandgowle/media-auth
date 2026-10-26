@@ -11,6 +11,8 @@ try {
     'known.png',
     'metadata/exif-little.png',
     'metadata/exif-big.png',
+    'metadata/xmp-attributes.png',
+    'metadata/xmp-elements.png',
     'metadata/dimensions-match.png',
     'metadata/dimensions-different.png',
   ]) {
@@ -38,7 +40,9 @@ try {
       // Viewers may apply recorded orientation 6. Both views preserve this flat fixture.
       assert.ok(
         (result.width === 16 && result.height === 8) ||
-          ((name.includes('little') || name.includes('dimensions-match')) &&
+          ((name.includes('little') ||
+            name.includes('attributes') ||
+            name.includes('dimensions-match')) &&
             result.width === 8 &&
             result.height === 16),
       );

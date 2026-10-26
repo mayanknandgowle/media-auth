@@ -129,3 +129,14 @@ Run `node scripts/generate-bmp-fixtures.mjs` explicitly to regenerate both with 
 | `metadata/xmp-elements.webp`   | 924   | `7a0d604fbe00c06e78b5f54ab2f93b499be1d50f68fc062fe28c823b6eadcdcc` |
 
 Generate explicitly with `node scripts/generate-webp-xmp-fixtures.mjs`; ordinary checks use pinned bytes. Independent Chromium verification checks every gray pixel at 16 × 8 (orientation is recorded separately). Fixed loopback routes support explicit local/page selection. No new probe corpus seed or parser dependency.
+
+## Recorded uncompressed static PNG XMP fixtures
+
+`metadata/xmp-attributes.png` and `metadata/xmp-elements.png` are original Apache-2.0 derivatives of our PNG EXIF little/big fixtures. EXIF/pixels are unchanged; original UTF-8 packets from the corresponding JPEG XMP fixtures use the canonical 22-byte uncompressed iTXt header and correct native Node CRC32. Attribute XMP is before IDAT; element XMP follows IDAT. Synthetic tool/date claims match the JPEG XMP values above; no real private metadata or downloaded media.
+
+| Fixture                       | Bytes | SHA-256                                                            |
+| ----------------------------- | ----- | ------------------------------------------------------------------ |
+| `metadata/xmp-attributes.png` | 869   | `974dbacddeabacf379b0c2068ee7d8bc0e87f03fa922e0b6fdcadd6343a54c4c` |
+| `metadata/xmp-elements.png`   | 975   | `e0249f3f654eeeb51889dadfe00f6afaf8a658af3c23451f7390ca98ebedcd34` |
+
+Generate explicitly with `node scripts/generate-png-xmp-fixtures.mjs`; ordinary checks use pinned bytes. Independent Chromium PNG verification checks every gray RGBA pixel, allowing orientation-6 display for the attribute fixture; reports retain encoded 16 × 8. Exact loopback routes support deliberate local/page selection. No new probe corpus seed or parser dependency.
