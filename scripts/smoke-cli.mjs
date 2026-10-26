@@ -53,6 +53,30 @@ for (const [command, prefix] of entries) {
       '0d640af34e012a426237fd91ffdb589fa8dd395f0f19f44b1cb109e8f9d16dbf',
     ],
     ['metadata/exif-big.png', 'd97eb34cf3b475abade086f9890f5fff1773681cfca17bd451754d05f98ecaa8'],
+    [
+      'metadata/dimensions-match.jpg',
+      'fe1b91713ffe765e8325256264767fe5fb655bc26551ca4a68f2191ac4e945a1',
+    ],
+    [
+      'metadata/dimensions-different.jpg',
+      '871b289ef369cdf352d14c1bcce0c2d7abda9b5e5bf360b46581c4d24f23d405',
+    ],
+    [
+      'metadata/dimensions-match.webp',
+      '994e08d99dc8f476a29b65c244051892f768ddf480c3fcc420ded151930d7976',
+    ],
+    [
+      'metadata/dimensions-different.webp',
+      '5fb43f8b1008fc92bf75c259f9c328f971e92b1022bf82f858109801a20c9ce3',
+    ],
+    [
+      'metadata/dimensions-match.png',
+      'ec37cdec8844051d019672a983bd5ea456763006750d3b92e7117e282db6e91f',
+    ],
+    [
+      'metadata/dimensions-different.png',
+      'efcc09206b69172e886f520f292a1862dce642a2b98626669b683937e087a572',
+    ],
     ['lossy.webp', 'fc3927eee0346e9c0ac714b66e4d157b7b5e15d1d1825e5f7ee301e9ea1a6d7a'],
     ['lossless.webp', 'f06216831f617441ac07a9fe1f8d49f91e62526b971eee3c06933b75a3411284'],
     ['alpha.webp', '3fa682dc8d44a3252ace27090c81b2a72e5e67ba64332c0867ea84ea5f25bd38'],
@@ -107,6 +131,15 @@ for (const [command, prefix] of entries) {
           (item) => item.field === 'cameraModel' && item.value === 'Fixture Camera',
         ),
       );
+      assert.equal(
+        exif.details.dimensionComparison.status,
+        name.includes('/dimensions-')
+          ? name.includes('-different')
+            ? 'DIFFERENT'
+            : 'MATCH'
+          : 'NOT_COMPARABLE',
+      );
+      assert.equal(analysis.conclusion.modification, 'UNKNOWN');
     }
     assert.equal(
       analysis.evidence.find((item) => item.category === 'EXACT_IDENTITY').details.value,

@@ -33,6 +33,21 @@ Run `npm run fixture:generate` to regenerate all three images. After `npx playwr
 
 Regenerate explicitly with `node scripts/generate-exif-fixtures.mjs`; ordinary checks consume pinned bytes. `node scripts/verify-jpeg-fixtures.mjs` decodes all four JPEGs with Chromium and checks every gray pixel. Chromium applies orientation 6 (8 × 16 display); the MediaAuth report retains encoded 16 × 8 and records orientation separately. This validates fixtures, not general EXIF/JPEG conformance. The loopback server adds only the two fixed `/metadata/*.jpg` routes; browser tests explicitly insert these controlled images into the test page.
 
+## EXIF dimension comparison fixtures
+
+Six original Apache-2.0 fixtures add a replacement ExifIFD containing PixelXDimension/PixelYDimension to the synthetic TIFF bytes without changing image payloads or any previous fixture. `dimensions-match` uses little-endian SHORT values 16 × 8 and orientation 6; `dimensions-different` uses big-endian LONG values 32 × 16 and orientation 1. All encoded images remain 16 × 8 gray RGBA(128,128,128,255). The numerical difference is deliberate fixture data, not an authenticity claim. The old unreferenced directory remains opaque padding.
+
+| File                                 | Bytes | SHA-256                                                            |
+| ------------------------------------ | ----- | ------------------------------------------------------------------ |
+| `metadata/dimensions-match.jpg`      | 513   | `fe1b91713ffe765e8325256264767fe5fb655bc26551ca4a68f2191ac4e945a1` |
+| `metadata/dimensions-different.jpg`  | 513   | `871b289ef369cdf352d14c1bcce0c2d7abda9b5e5bf360b46581c4d24f23d405` |
+| `metadata/dimensions-match.webp`     | 412   | `994e08d99dc8f476a29b65c244051892f768ddf480c3fcc420ded151930d7976` |
+| `metadata/dimensions-different.webp` | 412   | `5fb43f8b1008fc92bf75c259f9c328f971e92b1022bf82f858109801a20c9ce3` |
+| `metadata/dimensions-match.png`      | 438   | `ec37cdec8844051d019672a983bd5ea456763006750d3b92e7117e282db6e91f` |
+| `metadata/dimensions-different.png`  | 438   | `efcc09206b69172e886f520f292a1862dce642a2b98626669b683937e087a572` |
+
+Regenerate with `node scripts/generate-dimension-fixtures.mjs`. Independent PNG/JPEG/WebP verifier scripts decode all pixels, and supplemental host Pillow verifies dimension/orientation tags and encoded pixels. Chromium applies orientation 6 for JPEG/PNG, not these raw-TIFF WebP files; reports always preserve encoded axes. Six exact loopback routes support explicit browser selection. No new decoder dependency or probe corpus seed.
+
 ## Recorded PNG eXIf
 
 `metadata/exif-little.png` and `metadata/exif-big.png` are original generated 16 × 8 RGBA PNGs with gray 128 and alpha 255. Their single pre-IDAT eXIf contains the synthetic nine fields described above as raw classic TIFF; no JPEG prefix or real device data. They use Apache-2.0 and are separate from the ten probe seeds.

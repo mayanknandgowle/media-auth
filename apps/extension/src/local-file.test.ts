@@ -19,6 +19,33 @@ function selected(bytes: Uint8Array, size = bytes.length): SelectedFile {
 }
 
 describe('selected browser files', () => {
+  it.each(['jpg', 'webp', 'png'])(
+    'exports %s dimension agreement and differences with separate labels',
+    async (format) => {
+      for (const state of ['match', 'different']) {
+        const bytes = readFileSync(
+          new URL(
+            `../../../tests/fixtures/metadata/dimensions-${state}.${format}`,
+            import.meta.url,
+          ),
+        );
+        const report = await analyzeSelectedFile(selected(bytes));
+        const view = createReportView(report);
+        const comparison = view.dimensionComparisons.get(
+          `media-auth.${format === 'jpg' ? 'jpeg' : format}-exif:recorded`,
+        );
+        expect(comparison).toContain(
+          state === 'match' ? 'Numbers match on encoded axes' : 'Numbers differ on encoded axes',
+        );
+        expect(comparison).toContain('Orientation is not applied');
+        if (state === 'different')
+          expect(comparison).toContain('Padding or historical/forged metadata');
+        expect(JSON.parse(view.json)).toEqual(report);
+        expect(report.media.dimensions).toEqual({ width: 16, height: 8 });
+        expect(report.conclusion.modification).toBe('UNKNOWN');
+      }
+    },
+  );
   it.each([
     'known.png',
     'baseline.jpg',

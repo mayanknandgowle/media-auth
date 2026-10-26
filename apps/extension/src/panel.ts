@@ -107,6 +107,8 @@ function showReport(value: unknown) {
           dateTimeOriginal: 'Recorded original date/time',
           dateTimeDigitized: 'Recorded digitized date/time',
           orientation: 'Recorded orientation (not applied)',
+          pixelXDimension: 'Recorded EXIF pixel width',
+          pixelYDimension: 'Recorded EXIF pixel height',
           lensMake: 'Recorded lens make',
           lensModel: 'Recorded lens model',
         };
@@ -130,6 +132,8 @@ function showReport(value: unknown) {
         }
         card.append(fields);
       }
+      const comparison = view.dimensionComparisons.get(item.id);
+      if (comparison) card.append(node('p', comparison));
       const detail = node('details', '');
       detail.append(
         node('summary', 'Recorded details'),

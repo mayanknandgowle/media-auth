@@ -125,7 +125,7 @@ export function readExifTiff(
     if (value < 1 || value > 8) invalidExif('EXIF orientation is outside 1..8.');
     add('orientation', value);
   }
-  if (subdirectory)
+  if (subdirectory) {
     fields(
       subdirectory,
       new Map([
@@ -135,5 +135,19 @@ export function readExifTiff(
         [0xa434, 'lensModel'],
       ]),
     );
+    for (const [tag, name] of [
+      [0xa002, 'pixelXDimension'],
+      [0xa003, 'pixelYDimension'],
+    ] as const) {
+      const entry = subdirectory.entries.find((item) => item.tag === tag);
+      if (!entry) continue;
+      if ((entry.type !== 3 && entry.type !== 4) || entry.count !== 1)
+        invalidExif('EXIF pixel dimensions require one SHORT or LONG.');
+      const value =
+        entry.type === 3 ? view.getUint16(entry.slot, little) : view.getUint32(entry.slot, little);
+      if (!value) invalidExif('EXIF pixel dimensions must be positive.');
+      add(name, value);
+    }
+  }
   return observations;
 }

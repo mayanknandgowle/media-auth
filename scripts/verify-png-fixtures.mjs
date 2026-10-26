@@ -7,7 +7,13 @@ import assert from 'node:assert/strict';
 const browser = await chromium.launch({ channel: 'chromium', headless: true });
 try {
   const page = await browser.newPage();
-  for (const name of ['known.png', 'metadata/exif-little.png', 'metadata/exif-big.png']) {
+  for (const name of [
+    'known.png',
+    'metadata/exif-little.png',
+    'metadata/exif-big.png',
+    'metadata/dimensions-match.png',
+    'metadata/dimensions-different.png',
+  ]) {
     const bytes = await readFile(new URL(`../tests/fixtures/${name}`, import.meta.url));
     const result = await page.evaluate(async (base64) => {
       const image = new Image();
@@ -32,7 +38,9 @@ try {
       // Viewers may apply recorded orientation 6. Both views preserve this flat fixture.
       assert.ok(
         (result.width === 16 && result.height === 8) ||
-          (name.includes('little') && result.width === 8 && result.height === 16),
+          ((name.includes('little') || name.includes('dimensions-match')) &&
+            result.width === 8 &&
+            result.height === 16),
       );
       assert.ok(result.pixels.every((value, i) => value === (i % 4 === 3 ? 255 : 128)));
     }

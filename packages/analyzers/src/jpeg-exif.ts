@@ -4,7 +4,7 @@ import { invalidExif, readExifTiff } from './exif-tiff.js';
 import { openExifReader, exifReadFailure } from './exif-reader.js';
 import { createRecordedExifAnalyzer } from './recorded-exif.js';
 
-const identity = { id: 'media-auth.jpeg-exif', version: '0.1.1' };
+const identity = { id: 'media-auth.jpeg-exif', version: '0.2.0' };
 const limitations = [
   'Selected classic TIFF fields from one EXIF APP1 block before the first JPEG scan were inspected; this is not full EXIF conformance validation.',
   'Camera, software, dates and orientation are recorded claims that can be forged; no device, editing history, timezone, provenance or authenticity is inferred.',

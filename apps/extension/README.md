@@ -10,6 +10,8 @@ Read the file facts, SHA-256, ten evidence cards, including separate JPEG, WebP 
 
 ## Manual smoke test
 
+EXIF cards also show recorded pixel width/height and a numeric comparison on encoded axes without orientation. Both pairs appear when complete; missing values explicitly prevent comparison. Agreement does not verify authenticity, and differences can reflect padding or historical metadata without proving editing. See [ADR 0013](../../docs/adr/0013-exif-dimension-comparison.md).
+
 1. Run `npm run fixture:serve` and open `http://127.0.0.1:4173/` in the browser that loaded the unpacked extension.
 2. Invoke the MediaAuth toolbar action. Its user gesture opens the Side Panel and grants temporary page access.
 3. Click **Discover page images**. The known blue PNG should appear. The `/gallery` fixture route also supplies all ten original supported fixtures. Discovery reads image element URLs and labels; it does not acquire media bytes.
@@ -19,7 +21,7 @@ Read the file facts, SHA-256, ten evidence cards, including separate JPEG, WebP 
 
 ## Automated coverage and its limit
 
-`npm run test:browser` requires the Playwright Chromium browser (`npx playwright install chromium`). It first loads the exact production extension and checks its manifest, Side Panel configuration, and refusal to inspect a page without an `activeTab` grant. It then tests unchanged production panel/worker code with a **temporary test-only loopback host permission** and the panel rendered as an extension tab. This exercises real Chromium messaging, isolated-world discovery/fetch, byte acquisition, probing, analyzers, and result rendering. The exact production extension additionally tests local-file input for all ten probe fixtures and six EXIF fixtures without activeTab, safe injection-like filename rendering, invalid/oversized files, report download/clear, and layouts at 320/640 pixels. The loopback copy tests all ten probe images and six EXIF images, checks recorded field text/export and unrotated dimensions, and verifies discovery never fetches their bytes and each selection acquires exactly one asset. Screenshots go to ignored `test-results`.
+`npm run test:browser` requires the Playwright Chromium browser (`npx playwright install chromium`). It first loads the exact production extension and checks its manifest, Side Panel configuration, and refusal to inspect a page without an `activeTab` grant. It then tests unchanged production panel/worker code with a **temporary test-only loopback host permission** and the panel rendered as an extension tab. This exercises real Chromium messaging, isolated-world discovery/fetch, byte acquisition, probing, analyzers, and result rendering. The exact production extension additionally tests local-file input for all ten probe fixtures and twelve EXIF fixtures without activeTab, safe injection-like filename rendering, invalid/oversized files, report download/clear, and layouts at 320/640 pixels. The loopback copy tests all ten probe images and twelve EXIF images, checks recorded field text/export and unrotated dimensions, and verifies discovery never fetches their bytes and each selection acquires exactly one asset. Screenshots go to ignored `test-results`.
 
 The extra test permission is never included in the production build. Native toolbar invocation, Chromium's `activeTab` grant, and native Side Panel hosting still require the manual procedure above. Automated integration coverage does not imply these native UI steps passed.
 

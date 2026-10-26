@@ -81,6 +81,12 @@ try {
     ['metadata/exif-big.webp', 'image/webp'],
     ['metadata/exif-little.png', 'image/png'],
     ['metadata/exif-big.png', 'image/png'],
+    ['metadata/dimensions-match.jpg', 'image/jpeg'],
+    ['metadata/dimensions-different.jpg', 'image/jpeg'],
+    ['metadata/dimensions-match.webp', 'image/webp'],
+    ['metadata/dimensions-different.webp', 'image/webp'],
+    ['metadata/dimensions-match.png', 'image/png'],
+    ['metadata/dimensions-different.png', 'image/png'],
     ['lossy.webp', 'image/webp'],
     ['lossless.webp', 'image/webp'],
     ['alpha.webp', 'image/webp'],
@@ -127,10 +133,26 @@ try {
       await expect(card.locator('dl')).toContainText('Recorded orientation (not applied)');
       assert.equal(await card.locator('fixture').count(), 0, 'Recorded text must not become HTML.');
       assert.deepEqual(local.media.dimensions, { width: 16, height: 8 });
+      if (name.includes('/dimensions-')) {
+        const different = name.includes('-different');
+        assert.equal(exif.details.dimensionComparison.status, different ? 'DIFFERENT' : 'MATCH');
+        await expect(card).toContainText(
+          different ? 'Numbers differ on encoded axes' : 'Numbers match on encoded axes',
+        );
+        await expect(card.locator('dl')).toContainText('Recorded EXIF pixel width');
+        await expect(card).toContainText('Orientation is not applied');
+        if (different) await expect(card).toContainText('Padding or historical/forged metadata');
+      } else {
+        assert.equal(exif.details.dimensionComparison.status, 'NOT_COMPARABLE');
+        await expect(card).toContainText('No agreement or difference is established');
+      }
+      assert.equal(local.conclusion.modification, 'UNKNOWN');
     }
   }
   assert.equal(allImageRequests, beforeLocal, 'Local inspection must not fetch page/media URLs.');
-  await localPanel.locator('#file').setInputFiles('tests/fixtures/metadata/exif-little.png');
+  await localPanel
+    .locator('#file')
+    .setInputFiles('tests/fixtures/metadata/dimensions-different.png');
   await expect(localPanel.locator('#status')).toContainText('Local analysis complete');
   const downloadPromise = localPanel.waitForEvent('download');
   await localPanel.locator('#export').click();
@@ -167,7 +189,9 @@ try {
     buffer: Buffer.alloc(8 * 1024 * 1024 + 1),
   });
   await expect(localPanel.locator('#status')).toContainText('8 MiB');
-  await localPanel.locator('#file').setInputFiles('tests/fixtures/metadata/exif-little.png');
+  await localPanel
+    .locator('#file')
+    .setInputFiles('tests/fixtures/metadata/dimensions-different.png');
   await expect(localPanel.locator('#status')).toContainText('Local analysis complete');
   await mkdir('test-results', { recursive: true });
   await localPanel.setViewportSize({ width: 320, height: 900 });
@@ -186,7 +210,7 @@ try {
   });
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: production MV3 loads, page access requires a grant, sixteen fixtures inspect locally without activeTab, recorded EXIF stays text, JSON download/clear/errors and narrow layouts work.',
+    'PASS: production MV3 loads, page access requires a grant, twenty-two fixtures inspect locally without activeTab, recorded EXIF/comparisons stay text, JSON download/clear/errors and narrow layouts work.',
   );
   await production.context.close();
 
@@ -276,7 +300,7 @@ try {
     assert.equal(pageReport.media.source.acquisition, 'ORIGINAL_WEB_ASSET');
     assert.equal(allImageRequests, count + 1, 'Each selection must acquire exactly one asset.');
   }
-  // Controlled same-origin DOM supplies six fixed metadata fixture routes.
+  // Controlled same-origin DOM supplies twelve fixed metadata fixture routes.
   await fixture.evaluate(async () => {
     document.body.replaceChildren();
     for (const name of [
@@ -286,6 +310,12 @@ try {
       'exif-big.webp',
       'exif-little.png',
       'exif-big.png',
+      'dimensions-match.jpg',
+      'dimensions-different.jpg',
+      'dimensions-match.webp',
+      'dimensions-different.webp',
+      'dimensions-match.png',
+      'dimensions-different.png',
     ]) {
       const image = document.createElement('img');
       image.alt = name;
@@ -296,7 +326,7 @@ try {
   });
   const beforeMetadata = allImageRequests;
   await panel.locator('#discover').evaluate((button) => button.click());
-  await expect(panel.locator('#status')).toContainText('6 image(s) discovered');
+  await expect(panel.locator('#status')).toContainText('12 image(s) discovered');
   assert.equal(allImageRequests, beforeMetadata);
   for (const name of [
     'exif-little.jpg',
@@ -305,6 +335,12 @@ try {
     'exif-big.webp',
     'exif-little.png',
     'exif-big.png',
+    'dimensions-match.jpg',
+    'dimensions-different.jpg',
+    'dimensions-match.webp',
+    'dimensions-different.webp',
+    'dimensions-match.png',
+    'dimensions-different.png',
   ]) {
     const before = allImageRequests;
     await panel
@@ -322,13 +358,27 @@ try {
       'DETECTED',
     );
     await expect(panel.locator('#evidence')).toContainText('Fixture Lens');
+    if (name.startsWith('dimensions-')) {
+      const exif = metadata.evidence.find(
+        (item) =>
+          item.source.id ===
+          `media-auth.${name.endsWith('.png') ? 'png' : name.endsWith('.webp') ? 'webp' : 'jpeg'}-exif`,
+      );
+      const different = name.includes('-different');
+      assert.equal(exif.details.dimensionComparison.status, different ? 'DIFFERENT' : 'MATCH');
+      await expect(panel.locator('#evidence')).toContainText(
+        different ? 'Numbers differ on encoded axes' : 'Numbers match on encoded axes',
+      );
+      assert.deepEqual(metadata.media.dimensions, { width: 16, height: 8 });
+      assert.equal(metadata.conclusion.modification, 'UNKNOWN');
+    }
     assert.equal(allImageRequests, before + 1);
   }
   await panel.locator('#clear').evaluate((button) => button.click());
   await expect(panel.locator('#status')).toContainText('Session cleared');
   assert.equal(await panel.locator('#candidates button').count(), 0);
   console.log(
-    'PASS: production panel/worker discover and inspect ten probe and six EXIF page fixtures with a disposable loopback grant; only selected assets are acquired, stale selections are rejected, and clear forgets candidates.',
+    'PASS: production panel/worker discover and inspect ten probe and twelve EXIF page fixtures with a disposable loopback grant; numeric comparisons preserve uncertainty, only selected assets are acquired, stale selections are rejected, and clear forgets candidates.',
   );
   console.log(
     'NOT VERIFIED: native toolbar activation, the real activeTab grant, and native Side Panel hosting. Complete the manual procedure in apps/extension/README.md.',

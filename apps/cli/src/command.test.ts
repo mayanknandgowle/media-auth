@@ -20,6 +20,49 @@ afterEach(async () => {
 });
 
 describe('CLI commands', () => {
+  it.each(['jpg', 'webp', 'png'])(
+    'reports recorded %s dimension comparisons only in inspect',
+    async (format) => {
+      for (const state of ['match', 'different']) {
+        const path = fileURLToPath(
+          new URL(
+            `../../../tests/fixtures/metadata/dimensions-${state}.${format}`,
+            import.meta.url,
+          ),
+        );
+        const result = await executeCommand(['inspect', path]);
+        if (result.exitCode !== 0 || !('evidence' in result.output))
+          throw new Error('Expected inspection');
+        const exif = result.output.evidence.find(
+          (item) => item.source.id === `media-auth.${format === 'jpg' ? 'jpeg' : format}-exif`,
+        );
+        expect(exif).toMatchObject({
+          status: 'DETECTED',
+          details: {
+            dimensionComparison: {
+              kind: 'NUMERIC_COMPARISON',
+              status: state === 'match' ? 'MATCH' : 'DIFFERENT',
+              encoded: { width: 16, height: 8 },
+              recorded: { width: state === 'match' ? 16 : 32, height: state === 'match' ? 8 : 16 },
+            },
+          },
+        });
+        expect(result.output.conclusion).toMatchObject({
+          verdict: 'INCONCLUSIVE',
+          origin: 'UNKNOWN',
+          modification: 'UNKNOWN',
+        });
+        const probe = await executeCommand(['probe', path]);
+        expect(probe).toMatchObject({
+          exitCode: 0,
+          output: {
+            media: { dimensions: { width: 16, height: 8 }, metadataAvailability: 'NOT_PROBED' },
+          },
+        });
+        expect(probe.output).not.toHaveProperty('evidence');
+      }
+    },
+  );
   it('probes PNG with a tight payload/read budget and rejects smaller payload budgets', async () => {
     // The largest fixture chunk is 40 bytes; CRC scanning also covers its four-byte type.
     expect(

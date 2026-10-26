@@ -4,7 +4,7 @@ import { exifReadFailure, openExifReader } from './exif-reader.js';
 import { invalidExif, readExifTiff } from './exif-tiff.js';
 import { createRecordedExifAnalyzer } from './recorded-exif.js';
 
-const identity = { id: 'media-auth.webp-exif', version: '0.1.0' };
+const identity = { id: 'media-auth.webp-exif', version: '0.2.0' };
 const limitations = [
   'Selected classic TIFF fields from one static WebP EXIF chunk were inspected; this is not full WebP or EXIF conformance validation.',
   'Camera, software, dates and orientation are recorded claims that can be forged; no device, editing history, timezone, provenance or authenticity is inferred.',

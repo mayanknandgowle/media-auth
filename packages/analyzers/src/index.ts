@@ -17,6 +17,7 @@ export type * from './contracts.js';
 export { jpegExifAdapter } from './jpeg-exif.js';
 export { webpExifAdapter } from './webp-exif.js';
 export { pngExifAdapter } from './png-exif.js';
+export { compareExifDimensions, type ExifDimensionComparison } from './exif-dimensions.js';
 
 const VERSION = '0.1.0';
 const metadataIdentity: EvidenceSource = { id: 'media-auth.container-metadata', version: '0.5.0' };

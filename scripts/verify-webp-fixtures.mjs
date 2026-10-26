@@ -13,6 +13,8 @@ try {
     'alpha.webp',
     'metadata/exif-little.webp',
     'metadata/exif-big.webp',
+    'metadata/dimensions-match.webp',
+    'metadata/dimensions-different.webp',
   ]) {
     const bytes = await readFile(new URL(`../tests/fixtures/${name}`, import.meta.url));
     const result = await page.evaluate(async (base64) => {

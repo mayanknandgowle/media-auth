@@ -1,5 +1,6 @@
 import { createEvidence, unavailableResult, type Analyzer, type Evidence } from '@media-auth/core';
 import type { MetadataAdapter } from './contracts.js';
+import { compareExifDimensions } from './exif-dimensions.js';
 
 /** Identical evidence semantics, with carrier-specific absence scope and limitations. */
 export function createRecordedExifAnalyzer(
@@ -39,6 +40,10 @@ export function createRecordedExifAnalyzer(
           details: {
             kind: 'RECORDED',
             observations: result.observations.map((item) => ({ ...item })),
+            dimensionComparison: compareExifDimensions(
+              result.observations,
+              media.descriptor.dimensions,
+            ),
           },
         });
       else if (result.status === 'NOT_DETECTED')
@@ -62,7 +67,10 @@ export function createRecordedExifAnalyzer(
         evidence: [evidence],
         limitations:
           result.status === 'DETECTED'
-            ? result.limitations
+            ? [
+                ...result.limitations,
+                'EXIF dimension comparison is numeric only, on encoded axes without orientation. Differences may reflect legitimate JPEG padding or historical/forged metadata; neither agreement nor difference establishes a cause, origin or authenticity.',
+              ]
             : [...limitations, result.status === 'NOT_DETECTED' ? result.scope : result.reason],
       };
     },

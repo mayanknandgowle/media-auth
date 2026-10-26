@@ -4,7 +4,7 @@ import { exifReadFailure, openExifReader, type ExifReader } from './exif-reader.
 import { invalidExif, readExifTiff } from './exif-tiff.js';
 import { createRecordedExifAnalyzer } from './recorded-exif.js';
 
-const identity = { id: 'media-auth.png-exif', version: '0.1.0' };
+const identity = { id: 'media-auth.png-exif', version: '0.2.0' };
 const signature = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
 const limitations = [
   'Selected static PNG framing, chunk CRCs and classic TIFF fields were checked; this is not full PNG or EXIF conformance validation.',

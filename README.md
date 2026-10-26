@@ -6,7 +6,7 @@ Install the image inspector using the [getting-started guide](GETTING_STARTED.md
 
 ## Current status
 
-Phase 2 adds selected recorded JPEG, static WebP, and static PNG EXIF fields to `inspect` and the extension: camera/lens make/model, software, date/time strings and orientation. These are forgeable recorded claims. Separate evidence states scoped absence, malformed metadata or unavailable access; dimensions stay encoded and conclusions stay conservative. See [JPEG ADR 0010](docs/adr/0010-bounded-jpeg-exif.md), [WebP ADR 0011](docs/adr/0011-static-webp-exif.md), [PNG ADR 0012](docs/adr/0012-static-png-exif.md), and the [current validation record](docs/plans/2026-10-22-png-exif-metadata.md).
+Phase 2 adds selected recorded JPEG, static WebP, and static PNG EXIF fields to `inspect` and the extension: camera/lens make/model, software, date/time strings, orientation and pixel dimensions. These are forgeable recorded claims. A separately labeled numeric comparison shows whether a complete recorded dimension pair matches encoded axes, differs, or cannot be compared. Differences may reflect legitimate JPEG padding or historical metadata; no editing or authenticity is inferred. Separate evidence states scoped absence, malformed metadata or unavailable access; dimensions stay encoded and conclusions stay conservative. See [JPEG ADR 0010](docs/adr/0010-bounded-jpeg-exif.md), [WebP ADR 0011](docs/adr/0011-static-webp-exif.md), [PNG ADR 0012](docs/adr/0012-static-png-exif.md), [comparison ADR 0013](docs/adr/0013-exif-dimension-comparison.md) and the [current validation record](docs/plans/2026-10-22-exif-dimension-comparison.md).
 
 The foundation includes Phase 1 media-probing increments for local CLI inspection of static PNG/WebP, single-image GIF, 24-bit BI_RGB BMP, and 8-bit baseline/progressive JPEG. The Chromium Manifest V3 image inspector supports the same format subsets for explicitly selected local files and eligible page assets. The shared pipeline records header observations, computes exact SHA-256 identities, and reports deferred analyzers as `UNAVAILABLE`. The conservative conclusion is `INCONCLUSIVE` when observations exist and `UNKNOWN` when no usable evidence exists. Neither means authentic or fake.
 
@@ -47,6 +47,7 @@ node apps/cli/dist/index.js inspect tests/fixtures/progressive.jpg
 node apps/cli/dist/index.js inspect tests/fixtures/metadata/exif-little.jpg
 node apps/cli/dist/index.js inspect tests/fixtures/metadata/exif-little.webp
 node apps/cli/dist/index.js inspect tests/fixtures/metadata/exif-little.png
+node apps/cli/dist/index.js inspect tests/fixtures/metadata/dimensions-different.png
 node apps/cli/dist/index.js probe tests/fixtures/lossless.webp
 node apps/cli/dist/index.js inspect tests/fixtures/alpha.webp
 node apps/cli/dist/index.js probe tests/fixtures/rgb24-top-down.bmp

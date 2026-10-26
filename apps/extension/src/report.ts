@@ -1,5 +1,6 @@
 import { assertEvidence, assertJson, DEFAULT_LIMITS, type Evidence } from '@media-auth/core';
 import { isRecord } from './protocol.js';
+import { exifComparisonText } from './exif-comparison.js';
 
 export interface ReportView {
   readonly verdict: string;
@@ -7,6 +8,7 @@ export interface ReportView {
   readonly facts: readonly [string, string][];
   readonly hash: string | undefined;
   readonly evidence: readonly Evidence[];
+  readonly dimensionComparisons: ReadonlyMap<string, string>;
   readonly limitations: readonly string[];
   readonly json: string;
 }
@@ -79,6 +81,7 @@ export function createReportView(value: unknown): ReportView {
   )
     invalid();
   const evidence: Evidence[] = [];
+  const dimensionComparisons = new Map<string, string>();
   const ids = new Set<string>();
   let hash: string | undefined;
   for (const item of value.evidence) {
@@ -86,6 +89,18 @@ export function createReportView(value: unknown): ReportView {
     if (ids.has(item.id)) invalid();
     ids.add(item.id);
     evidence.push(item);
+    if (
+      item.status === 'DETECTED' &&
+      ['media-auth.jpeg-exif', 'media-auth.webp-exif', 'media-auth.png-exif'].includes(
+        item.source.id,
+      )
+    ) {
+      const comparison = exifComparisonText(item.details, {
+        width: dimensions.width,
+        height: dimensions.height,
+      });
+      if (comparison) dimensionComparisons.set(item.id, comparison);
+    }
     if (item.category === 'EXACT_IDENTITY' && item.status === 'DETECTED') {
       if (
         !isRecord(item.details) ||
@@ -121,6 +136,7 @@ export function createReportView(value: unknown): ReportView {
     facts,
     hash,
     evidence,
+    dimensionComparisons,
     limitations: value.limitations.map((item) => text(item)),
     json: JSON.stringify(value, null, 2),
   };
