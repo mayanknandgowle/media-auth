@@ -14,6 +14,8 @@ try {
     'metadata/exif-big.jpg',
     'metadata/dimensions-match.jpg',
     'metadata/dimensions-different.jpg',
+    'metadata/xmp-attributes.jpg',
+    'metadata/xmp-elements.jpg',
   ]) {
     const bytes = await readFile(new URL(`../tests/fixtures/${name}`, import.meta.url));
     const result = await page.evaluate(async (base64) => {
@@ -31,7 +33,10 @@ try {
         pixels: Array.from(context.getImageData(0, 0, image.width, image.height).data),
       };
     }, bytes.toString('base64'));
-    const rotated = name === 'metadata/exif-little.jpg' || name === 'metadata/dimensions-match.jpg';
+    const rotated =
+      name === 'metadata/exif-little.jpg' ||
+      name === 'metadata/dimensions-match.jpg' ||
+      name === 'metadata/xmp-attributes.jpg';
     assert.equal(result.width, rotated ? 8 : 16);
     assert.equal(result.height, rotated ? 16 : 8);
     assert.ok(result.pixels.every((value, i) => value === (i % 4 === 3 ? 255 : 128)));

@@ -24,10 +24,11 @@ const hash = element('#hash', HTMLElement);
 const verdict = element('#verdict', HTMLHeadingElement);
 let busy = false;
 let currentReport: ReportView | undefined;
-const exifTitles = new Map([
-  ['media-auth.jpeg-exif', 'JPEG EXIF fields'],
-  ['media-auth.webp-exif', 'WebP EXIF fields'],
-  ['media-auth.png-exif', 'PNG EXIF fields'],
+const metadataCards = new Map([
+  ['media-auth.jpeg-exif', { title: 'JPEG EXIF fields', format: 'EXIF' }],
+  ['media-auth.webp-exif', { title: 'WebP EXIF fields', format: 'EXIF' }],
+  ['media-auth.png-exif', { title: 'PNG EXIF fields', format: 'EXIF' }],
+  ['media-auth.jpeg-xmp', { title: 'JPEG XMP fields', format: 'XMP' }],
 ]);
 
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, text: string) {
@@ -76,7 +77,10 @@ function showReport(value: unknown) {
     );
     badge.className = item.status === 'DETECTED' ? 'badge observed' : 'badge';
     top.append(
-      node('h3', exifTitles.get(item.source.id) ?? categoryLabels[item.category] ?? item.category),
+      node(
+        'h3',
+        metadataCards.get(item.source.id)?.title ?? categoryLabels[item.category] ?? item.category,
+      ),
       badge,
     );
     card.append(top, node('p', item.explanation));
@@ -94,7 +98,7 @@ function showReport(value: unknown) {
     card.append(attribution);
     if (item.status === 'DETECTED') {
       if (
-        exifTitles.has(item.source.id) &&
+        metadataCards.has(item.source.id) &&
         isRecord(item.details) &&
         Array.isArray(item.details.observations)
       ) {
@@ -111,6 +115,11 @@ function showReport(value: unknown) {
           pixelYDimension: 'Recorded EXIF pixel height',
           lensMake: 'Recorded lens make',
           lensModel: 'Recorded lens model',
+          packetPresent: 'XMP packet present',
+          creatorTool: 'Recorded XMP creator tool',
+          createDate: 'Recorded XMP creation date',
+          modifyDate: 'Recorded XMP modification date',
+          metadataDate: 'Recorded XMP metadata date',
         };
         const fields = node('dl', '');
         fields.className = 'facts';
@@ -118,11 +127,13 @@ function showReport(value: unknown) {
           if (
             !isRecord(observation) ||
             observation.kind !== 'RECORDED' ||
-            observation.format !== 'EXIF' ||
+            observation.format !== metadataCards.get(item.source.id)?.format ||
             typeof observation.field !== 'string'
           )
             continue;
-          const label = labels[observation.field];
+          const label = Object.hasOwn(labels, observation.field)
+            ? labels[observation.field]
+            : undefined;
           const value = observation.value;
           if (
             label &&

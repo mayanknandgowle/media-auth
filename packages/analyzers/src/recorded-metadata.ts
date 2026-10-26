@@ -3,8 +3,9 @@ import type { MetadataAdapter } from './contracts.js';
 import { compareExifDimensions } from './exif-dimensions.js';
 
 /** Identical evidence semantics, with carrier-specific absence scope and limitations. */
-export function createRecordedExifAnalyzer(
+export function createRecordedMetadataAnalyzer(
   adapter: MetadataAdapter,
+  format: 'EXIF' | 'XMP',
   limitations: readonly string[],
   absenceExplanation: string,
 ): Analyzer {
@@ -35,15 +36,18 @@ export function createRecordedExifAnalyzer(
           ...base,
           status: 'DETECTED',
           confidence: { kind: 'NOT_ASSESSED' },
-          explanation:
-            'An EXIF block was observed; any selected fields are recorded claims and do not verify origin or authenticity.',
+          explanation: `A supported ${format} block was observed; selected fields are recorded claims and do not verify origin or authenticity.`,
           details: {
             kind: 'RECORDED',
             observations: result.observations.map((item) => ({ ...item })),
-            dimensionComparison: compareExifDimensions(
-              result.observations,
-              media.descriptor.dimensions,
-            ),
+            ...(format === 'EXIF'
+              ? {
+                  dimensionComparison: compareExifDimensions(
+                    result.observations,
+                    media.descriptor.dimensions,
+                  ),
+                }
+              : {}),
           },
         });
       else if (result.status === 'NOT_DETECTED')
@@ -58,7 +62,7 @@ export function createRecordedExifAnalyzer(
           ...base,
           status: 'INCONCLUSIVE',
           reason: result.reason,
-          explanation: 'EXIF inspection could not produce an unambiguous supported observation.',
+          explanation: `${format} inspection could not produce an unambiguous supported observation.`,
         });
       return {
         schemaVersion: '1.0',
@@ -69,7 +73,11 @@ export function createRecordedExifAnalyzer(
           result.status === 'DETECTED'
             ? [
                 ...result.limitations,
-                'EXIF dimension comparison is numeric only, on encoded axes without orientation. Differences may reflect legitimate JPEG padding or historical/forged metadata; neither agreement nor difference establishes a cause, origin or authenticity.',
+                ...(format === 'EXIF'
+                  ? [
+                      'EXIF dimension comparison is numeric only, on encoded axes without orientation. Differences may reflect legitimate JPEG padding or historical/forged metadata; neither agreement nor difference establishes a cause, origin or authenticity.',
+                    ]
+                  : []),
               ]
             : [...limitations, result.status === 'NOT_DETECTED' ? result.scope : result.reason],
       };

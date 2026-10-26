@@ -1,8 +1,8 @@
 import { MediaAuthError } from '@media-auth/core';
 import type { MetadataAdapter } from './contracts.js';
-import { exifReadFailure, openExifReader } from './exif-reader.js';
+import { metadataReadFailure, openMetadataReader } from './metadata-reader.js';
 import { invalidExif, readExifTiff } from './exif-tiff.js';
-import { createRecordedExifAnalyzer } from './recorded-exif.js';
+import { createRecordedMetadataAnalyzer } from './recorded-metadata.js';
 
 const identity = { id: 'media-auth.webp-exif', version: '0.2.0' };
 const limitations = [
@@ -19,7 +19,7 @@ const uint32 = (bytes: Uint8Array, offset: number) =>
 export const webpExifAdapter: MetadataAdapter = {
   identity,
   async read(media, context) {
-    const reader = openExifReader(media, context, 'image/webp', 'WebP');
+    const reader = openMetadataReader(media, context, 'image/webp', 'WebP', 'EXIF');
     if ('status' in reader) return reader;
     try {
       const header = await reader.range(0, 12);
@@ -88,13 +88,14 @@ export const webpExifAdapter: MetadataAdapter = {
           : limitations,
       };
     } catch (error) {
-      return exifReadFailure(error, 'WebP');
+      return metadataReadFailure(error, 'WebP', 'EXIF');
     }
   },
 };
 
-export const webpExifAnalyzer = createRecordedExifAnalyzer(
+export const webpExifAnalyzer = createRecordedMetadataAnalyzer(
   webpExifAdapter,
+  'EXIF',
   limitations,
   'No EXIF chunk was found within the static WebP RIFF search scope. This does not establish authenticity.',
 );

@@ -6,6 +6,8 @@ The Graphics Interchange Format is the copyright property of CompuServe Incorpor
 
 JPEG/WebP/PNG EXIF readers and synthetic metadata fixtures are original Apache-2.0 material. Publisher format references are linked in [ADR 0010](docs/adr/0010-bounded-jpeg-exif.md), [ADR 0011](docs/adr/0011-static-webp-exif.md) and [ADR 0012](docs/adr/0012-static-png-exif.md); no EXIF specification or third-party parser is redistributed.
 
+The limited JPEG XMP/XML readers and fixtures are also original Apache-2.0 code/material. Standard UTF-8 TextDecoder belongs to the runtime; no external XML parser or Adobe SDK is bundled. Publisher references in [ADR 0014](docs/adr/0014-bounded-jpeg-xmp.md) are not redistributed.
+
 There are currently no third-party runtime dependencies bundled into the CLI or extension. The build uses native Node cryptography and browser WebCrypto. Development tooling remains separately licensed:
 
 | Dependency                            | License    |

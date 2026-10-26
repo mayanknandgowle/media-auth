@@ -1,8 +1,8 @@
 import { MediaAuthError } from '@media-auth/core';
 import type { MetadataAdapter } from './contracts.js';
-import { exifReadFailure, openExifReader, type ExifReader } from './exif-reader.js';
+import { metadataReadFailure, openMetadataReader, type MetadataReader } from './metadata-reader.js';
 import { invalidExif, readExifTiff } from './exif-tiff.js';
-import { createRecordedExifAnalyzer } from './recorded-exif.js';
+import { createRecordedMetadataAnalyzer } from './recorded-metadata.js';
 
 const identity = { id: 'media-auth.png-exif', version: '0.2.0' };
 const signature = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
@@ -25,7 +25,7 @@ function updateCrc(state: number, bytes: Uint8Array): number {
 }
 
 async function checkChunk(
-  reader: ExifReader,
+  reader: MetadataReader,
   type: Uint8Array,
   offset: number,
   length: number,
@@ -49,7 +49,7 @@ async function checkChunk(
 export const pngExifAdapter: MetadataAdapter = {
   identity,
   async read(media, context) {
-    const reader = openExifReader(media, context, 'image/png', 'PNG');
+    const reader = openMetadataReader(media, context, 'image/png', 'PNG', 'EXIF');
     if ('status' in reader) return reader;
     try {
       const start = await reader.range(0, 8);
@@ -114,13 +114,14 @@ export const pngExifAdapter: MetadataAdapter = {
         };
       return { status: 'DETECTED', observations: readExifTiff(exif, reader.consume), limitations };
     } catch (error) {
-      return exifReadFailure(error, 'PNG');
+      return metadataReadFailure(error, 'PNG', 'EXIF');
     }
   },
 };
 
-export const pngExifAnalyzer = createRecordedExifAnalyzer(
+export const pngExifAnalyzer = createRecordedMetadataAnalyzer(
   pngExifAdapter,
+  'EXIF',
   limitations,
   'No eXIf chunk was found within the static PNG search scope. This does not establish authenticity.',
 );

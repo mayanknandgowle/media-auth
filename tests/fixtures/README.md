@@ -33,6 +33,17 @@ Run `npm run fixture:generate` to regenerate all three images. After `npx playwr
 
 Regenerate explicitly with `node scripts/generate-exif-fixtures.mjs`; ordinary checks consume pinned bytes. `node scripts/verify-jpeg-fixtures.mjs` decodes all four JPEGs with Chromium and checks every gray pixel. Chromium applies orientation 6 (8 × 16 display); the MediaAuth report retains encoded 16 × 8 and records orientation separately. This validates fixtures, not general EXIF/JPEG conformance. The loopback server adds only the two fixed `/metadata/*.jpg` routes; browser tests explicitly insert these controlled images into the test page.
 
+## Recorded JPEG XMP fixtures
+
+`metadata/xmp-attributes.jpg` and `metadata/xmp-elements.jpg` are original Apache-2.0 derivatives of the original EXIF little/big JPEG fixtures. Pixels and EXIF bytes remain unchanged. One pre-scan APP1 contains an original UTF-8 XMP packet. Variants cover attributes/elements, aliases, wrappers, Unicode and safe references. CreatorTool is `MediaAuth <fixture> & café 📷`; CreateDate/ModifyDate/MetadataDate are `2026-10-26T12:34:56+05:30`, `2026-10-26T12:35:00+05:30` and `2026-10-26T12:36:00+05:30`. Dates are synthetic, not verified history. An opaque nested spoof property and loopback URL are not extracted or fetched.
+
+| File                          | Bytes | SHA-256                                                            |
+| ----------------------------- | ----- | ------------------------------------------------------------------ |
+| `metadata/xmp-attributes.jpg` | 943   | `ec101ba530262de76b6ddeb122b87f058916f025c65049e15fed82d2adbd666b` |
+| `metadata/xmp-elements.jpg`   | 1049  | `b00b456634ed18927b006a0e7f23de0b2cba7f16d7e37549bf08270c3f530e33` |
+
+Generate with `node scripts/generate-xmp-fixtures.mjs`; ordinary checks use pinned bytes. Independent Chromium JPEG verification checks every gray pixel (attribute view 8 × 16, element view 16 × 8); reports retain encoded 16 × 8. Supplemental host ElementTree independently verifies all four direct claims and Pillow all encoded pixels. Exact loopback routes support explicit browser selection. No new probe seed or parser dependency.
+
 ## EXIF dimension comparison fixtures
 
 Six original Apache-2.0 fixtures add a replacement ExifIFD containing PixelXDimension/PixelYDimension to the synthetic TIFF bytes without changing image payloads or any previous fixture. `dimensions-match` uses little-endian SHORT values 16 × 8 and orientation 6; `dimensions-different` uses big-endian LONG values 32 × 16 and orientation 1. All encoded images remain 16 × 8 gray RGBA(128,128,128,255). The numerical difference is deliberate fixture data, not an authenticity claim. The old unreferenced directory remains opaque padding.

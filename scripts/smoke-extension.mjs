@@ -87,6 +87,8 @@ try {
     ['metadata/dimensions-different.webp', 'image/webp'],
     ['metadata/dimensions-match.png', 'image/png'],
     ['metadata/dimensions-different.png', 'image/png'],
+    ['metadata/xmp-attributes.jpg', 'image/jpeg'],
+    ['metadata/xmp-elements.jpg', 'image/jpeg'],
     ['lossy.webp', 'image/webp'],
     ['lossless.webp', 'image/webp'],
     ['alpha.webp', 'image/webp'],
@@ -98,7 +100,7 @@ try {
     await localPanel.locator('#file').setInputFiles(resolve('tests/fixtures', name));
     await expect(localPanel.locator('#facts')).toContainText(name.split('/').at(-1));
     await expect(localPanel.locator('#status')).toContainText('Local analysis complete');
-    await expect(localPanel.locator('#evidence .evidence-card')).toHaveCount(10);
+    await expect(localPanel.locator('#evidence .evidence-card')).toHaveCount(11);
     const local = JSON.parse(await localPanel.locator('#result').textContent());
     assert.equal(local.media.mimeType, mime);
     assert.equal(local.media.source.acquisition, 'LOCAL_FILE');
@@ -148,11 +150,25 @@ try {
       }
       assert.equal(local.conclusion.modification, 'UNKNOWN');
     }
+    const xmp = local.evidence.find((item) => item.source.id === 'media-auth.jpeg-xmp');
+    assert.equal(
+      xmp.status,
+      name.includes('/xmp-') ? 'DETECTED' : mime === 'image/jpeg' ? 'NOT_DETECTED' : 'UNAVAILABLE',
+    );
+    if (name.includes('/xmp-')) {
+      const card = localPanel
+        .locator('.evidence-card')
+        .filter({ has: localPanel.getByRole('heading', { name: 'JPEG XMP fields', exact: true }) });
+      await expect(card.locator('dl')).toContainText('MediaAuth <fixture> & café 📷');
+      await expect(card.locator('dl')).toContainText('2026-10-26T12:34:56+05:30');
+      await expect(card.locator('dl')).toContainText('Recorded XMP creator tool');
+      assert.equal(await card.locator('fixture').count(), 0);
+      assert.equal(xmp.details.dimensionComparison, undefined);
+      assert.equal(xmp.details.observations.length, 5);
+    }
   }
   assert.equal(allImageRequests, beforeLocal, 'Local inspection must not fetch page/media URLs.');
-  await localPanel
-    .locator('#file')
-    .setInputFiles('tests/fixtures/metadata/dimensions-different.png');
+  await localPanel.locator('#file').setInputFiles('tests/fixtures/metadata/xmp-attributes.jpg');
   await expect(localPanel.locator('#status')).toContainText('Local analysis complete');
   const downloadPromise = localPanel.waitForEvent('download');
   await localPanel.locator('#export').click();
@@ -189,9 +205,7 @@ try {
     buffer: Buffer.alloc(8 * 1024 * 1024 + 1),
   });
   await expect(localPanel.locator('#status')).toContainText('8 MiB');
-  await localPanel
-    .locator('#file')
-    .setInputFiles('tests/fixtures/metadata/dimensions-different.png');
+  await localPanel.locator('#file').setInputFiles('tests/fixtures/metadata/xmp-attributes.jpg');
   await expect(localPanel.locator('#status')).toContainText('Local analysis complete');
   await mkdir('test-results', { recursive: true });
   await localPanel.setViewportSize({ width: 320, height: 900 });
@@ -210,7 +224,7 @@ try {
   });
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: production MV3 loads, page access requires a grant, twenty-two fixtures inspect locally without activeTab, recorded EXIF/comparisons stay text, JSON download/clear/errors and narrow layouts work.',
+    'PASS: production MV3 loads, page access requires a grant, twenty-four fixtures inspect locally without activeTab, recorded EXIF/XMP/comparisons stay text, JSON download/clear/errors and narrow layouts work.',
   );
   await production.context.close();
 
@@ -300,7 +314,7 @@ try {
     assert.equal(pageReport.media.source.acquisition, 'ORIGINAL_WEB_ASSET');
     assert.equal(allImageRequests, count + 1, 'Each selection must acquire exactly one asset.');
   }
-  // Controlled same-origin DOM supplies twelve fixed metadata fixture routes.
+  // Controlled same-origin DOM supplies fourteen fixed metadata fixture routes.
   await fixture.evaluate(async () => {
     document.body.replaceChildren();
     for (const name of [
@@ -316,6 +330,8 @@ try {
       'dimensions-different.webp',
       'dimensions-match.png',
       'dimensions-different.png',
+      'xmp-attributes.jpg',
+      'xmp-elements.jpg',
     ]) {
       const image = document.createElement('img');
       image.alt = name;
@@ -326,7 +342,7 @@ try {
   });
   const beforeMetadata = allImageRequests;
   await panel.locator('#discover').evaluate((button) => button.click());
-  await expect(panel.locator('#status')).toContainText('12 image(s) discovered');
+  await expect(panel.locator('#status')).toContainText('14 image(s) discovered');
   assert.equal(allImageRequests, beforeMetadata);
   for (const name of [
     'exif-little.jpg',
@@ -341,6 +357,8 @@ try {
     'dimensions-different.webp',
     'dimensions-match.png',
     'dimensions-different.png',
+    'xmp-attributes.jpg',
+    'xmp-elements.jpg',
   ]) {
     const before = allImageRequests;
     await panel
@@ -358,6 +376,13 @@ try {
       'DETECTED',
     );
     await expect(panel.locator('#evidence')).toContainText('Fixture Lens');
+    if (name.startsWith('xmp-')) {
+      const xmp = metadata.evidence.find((item) => item.source.id === 'media-auth.jpeg-xmp');
+      assert.equal(xmp.status, 'DETECTED');
+      await expect(panel.locator('#evidence')).toContainText('MediaAuth <fixture> & café 📷');
+      assert.equal(metadata.conclusion.origin, 'UNKNOWN');
+      assert.equal(metadata.conclusion.modification, 'UNKNOWN');
+    }
     if (name.startsWith('dimensions-')) {
       const exif = metadata.evidence.find(
         (item) =>
@@ -378,7 +403,7 @@ try {
   await expect(panel.locator('#status')).toContainText('Session cleared');
   assert.equal(await panel.locator('#candidates button').count(), 0);
   console.log(
-    'PASS: production panel/worker discover and inspect ten probe and twelve EXIF page fixtures with a disposable loopback grant; numeric comparisons preserve uncertainty, only selected assets are acquired, stale selections are rejected, and clear forgets candidates.',
+    'PASS: production panel/worker discover and inspect ten probe and fourteen metadata page fixtures with a disposable loopback grant; recorded EXIF/XMP preserve uncertainty, only selected assets are acquired, stale selections are rejected, and clear forgets candidates.',
   );
   console.log(
     'NOT VERIFIED: native toolbar activation, the real activeTab grant, and native Side Panel hosting. Complete the manual procedure in apps/extension/README.md.',

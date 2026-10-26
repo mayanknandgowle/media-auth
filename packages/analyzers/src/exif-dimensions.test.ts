@@ -106,7 +106,7 @@ describe('recorded EXIF dimensions', () => {
           provenance: 'UNAVAILABLE',
           confidence: { kind: 'NOT_ASSESSED' },
         });
-        expect(report.analyzers).toHaveLength(10);
+        expect(report.analyzers).toHaveLength(11);
         expect(report.limitations.join(' ')).toContain('legitimate JPEG padding');
       }
     },

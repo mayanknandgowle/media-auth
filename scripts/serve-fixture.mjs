@@ -21,6 +21,8 @@ for (const [name, mime] of [
   ['metadata/dimensions-different.webp', 'image/webp'],
   ['metadata/dimensions-match.png', 'image/png'],
   ['metadata/dimensions-different.png', 'image/png'],
+  ['metadata/xmp-attributes.jpg', 'image/jpeg'],
+  ['metadata/xmp-elements.jpg', 'image/jpeg'],
   ['lossy.webp', 'image/webp'],
   ['lossless.webp', 'image/webp'],
   ['alpha.webp', 'image/webp'],

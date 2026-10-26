@@ -20,6 +20,54 @@ afterEach(async () => {
 });
 
 describe('CLI commands', () => {
+  it.each(['xmp-attributes.jpg', 'xmp-elements.jpg'])(
+    'inspects %s as separate recorded XMP evidence',
+    async (name) => {
+      const path = fileURLToPath(
+        new URL(`../../../tests/fixtures/metadata/${name}`, import.meta.url),
+      );
+      const result = await executeCommand(['inspect', path]);
+      if (result.exitCode !== 0 || !('evidence' in result.output))
+        throw new Error('Expected report');
+      expect(
+        result.output.evidence.find((item) => item.source.id === 'media-auth.jpeg-xmp'),
+      ).toMatchObject({
+        status: 'DETECTED',
+        details: {
+          observations: expect.arrayContaining([
+            {
+              kind: 'RECORDED',
+              format: 'XMP',
+              field: 'creatorTool',
+              value: 'MediaAuth <fixture> & café 📷',
+            },
+          ]),
+        },
+      });
+      expect(
+        result.output.evidence.find((item) => item.source.id === 'media-auth.jpeg-exif'),
+      ).toHaveProperty('status', 'DETECTED');
+      expect(result.output.conclusion).toMatchObject({
+        origin: 'UNKNOWN',
+        modification: 'UNKNOWN',
+      });
+      const bytes = await readFile(path);
+      const index = bytes.indexOf(Buffer.from('r:about=""'));
+      expect(index).toBeGreaterThan(0);
+      bytes[index + 9] = 88;
+      const malformed = join(temporaryDirectory, 'invalid-xmp.jpg');
+      await writeFile(malformed, bytes);
+      const bad = await executeCommand(['inspect', malformed]);
+      if (bad.exitCode !== 0 || !('evidence' in bad.output)) throw new Error('Expected report');
+      expect(
+        bad.output.evidence.find((item) => item.source.id === 'media-auth.jpeg-xmp'),
+      ).toHaveProperty('status', 'INCONCLUSIVE');
+      expect(bad.output.evidence.find((item) => item.category === 'EXACT_IDENTITY')).toHaveProperty(
+        'status',
+        'DETECTED',
+      );
+    },
+  );
   it.each(['jpg', 'webp', 'png'])(
     'reports recorded %s dimension comparisons only in inspect',
     async (format) => {
@@ -108,7 +156,9 @@ describe('CLI commands', () => {
         throw new Error('Expected image analysis.');
       expect(
         inspected.output.analyzers.filter((analyzer) => analyzer.status === 'UNAVAILABLE'),
-      ).toHaveLength(['image/png', 'image/jpeg', 'image/webp'].includes(mimeType) ? 7 : 8);
+      ).toHaveLength(
+        mimeType === 'image/jpeg' ? 7 : ['image/png', 'image/webp'].includes(mimeType) ? 8 : 9,
+      );
       expect(inspected.output.conclusion.verdict).toBe('INCONCLUSIVE');
       expect(inspected.output.evidence.find((item) => item.category === 'METADATA')).toMatchObject({
         source: { id: 'media-auth.container-metadata', version: '0.5.0' },

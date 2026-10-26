@@ -13,10 +13,12 @@ import type { ExactHasher, MetadataAdapter, MetadataReadResult } from './contrac
 import { jpegExifAnalyzer } from './jpeg-exif.js';
 import { webpExifAnalyzer } from './webp-exif.js';
 import { pngExifAnalyzer } from './png-exif.js';
+import { jpegXmpAnalyzer } from './jpeg-xmp.js';
 export type * from './contracts.js';
 export { jpegExifAdapter } from './jpeg-exif.js';
 export { webpExifAdapter } from './webp-exif.js';
 export { pngExifAdapter } from './png-exif.js';
+export { jpegXmpAdapter } from './jpeg-xmp.js';
 export { compareExifDimensions, type ExifDimensionComparison } from './exif-dimensions.js';
 
 const VERSION = '0.1.0';
@@ -168,6 +170,7 @@ export function createFoundationRegistry(hasher: ExactHasher): AnalyzerRegistry 
     jpegExifAnalyzer,
     webpExifAnalyzer,
     pngExifAnalyzer,
+    jpegXmpAnalyzer,
     fingerprintAnalyzer(hasher),
     deferredAnalyzer(
       'media-auth.provenance',

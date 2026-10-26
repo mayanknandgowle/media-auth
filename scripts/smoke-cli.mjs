@@ -54,6 +54,14 @@ for (const [command, prefix] of entries) {
     ],
     ['metadata/exif-big.png', 'd97eb34cf3b475abade086f9890f5fff1773681cfca17bd451754d05f98ecaa8'],
     [
+      'metadata/xmp-attributes.jpg',
+      'ec101ba530262de76b6ddeb122b87f058916f025c65049e15fed82d2adbd666b',
+    ],
+    [
+      'metadata/xmp-elements.jpg',
+      'b00b456634ed18927b006a0e7f23de0b2cba7f16d7e37549bf08270c3f530e33',
+    ],
+    [
       'metadata/dimensions-match.jpg',
       'fe1b91713ffe765e8325256264767fe5fb655bc26551ca4a68f2191ac4e945a1',
     ],
@@ -109,7 +117,11 @@ for (const [command, prefix] of entries) {
     assert.equal(analysis.conclusion.verdict, 'INCONCLUSIVE');
     assert.equal(
       analysis.analyzers.filter((item) => item.status === 'UNAVAILABLE').length,
-      ['.jpg', '.webp', '.png'].some((extension) => name.endsWith(extension)) ? 7 : 8,
+      name.endsWith('.jpg')
+        ? 7
+        : ['.webp', '.png'].some((extension) => name.endsWith(extension))
+          ? 8
+          : 9,
     );
     const exif = analysis.evidence.find(
       (item) =>
@@ -141,6 +153,17 @@ for (const [command, prefix] of entries) {
       );
       assert.equal(analysis.conclusion.modification, 'UNKNOWN');
     }
+    const xmp = analysis.evidence.find((item) => item.source.id === 'media-auth.jpeg-xmp');
+    assert.equal(
+      xmp.status,
+      name.includes('/xmp-') ? 'DETECTED' : name.endsWith('.jpg') ? 'NOT_DETECTED' : 'UNAVAILABLE',
+    );
+    if (name.includes('/xmp-'))
+      assert.ok(
+        xmp.details.observations.some(
+          (item) => item.field === 'creatorTool' && item.value === 'MediaAuth <fixture> & café 📷',
+        ),
+      );
     assert.equal(
       analysis.evidence.find((item) => item.category === 'EXACT_IDENTITY').details.value,
       hash,
