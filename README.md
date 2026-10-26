@@ -6,7 +6,7 @@ Install the image inspector using the [getting-started guide](GETTING_STARTED.md
 
 ## Current status
 
-Selected JPEG XMP creator-tool and date claims are now reported separately from EXIF, using a bounded UTF-8 XML/RDF subset. Unknown properties are not extracted; extended packets, DTD/entity declarations and unsupported structures are inconclusive when encountered in scope. Claims do not verify editing history or authenticity. See [ADR 0014](docs/adr/0014-bounded-jpeg-xmp.md) and the [current validation record](docs/plans/2026-10-26-jpeg-xmp-metadata.md).
+Selected JPEG and static WebP XMP creator-tool and date claims are now reported separately from EXIF, using a bounded UTF-8 XML/RDF subset. Unknown properties are not extracted; extended packets, DTD/entity declarations and unsupported structures are inconclusive when encountered in scope. Claims do not verify editing history or authenticity. See [JPEG ADR 0014](docs/adr/0014-bounded-jpeg-xmp.md), [WebP ADR 0015](docs/adr/0015-static-webp-xmp.md) and the [current validation record](docs/plans/2026-10-26-webp-xmp-metadata.md).
 
 Phase 2 adds selected recorded JPEG, static WebP, and static PNG EXIF fields to `inspect` and the extension: camera/lens make/model, software, date/time strings, orientation and pixel dimensions. These are forgeable recorded claims. A separately labeled numeric comparison shows whether a complete recorded dimension pair matches encoded axes, differs, or cannot be compared. Differences may reflect legitimate JPEG padding or historical metadata; no editing or authenticity is inferred. Separate evidence states scoped absence, malformed metadata or unavailable access; dimensions stay encoded and conclusions stay conservative. See [JPEG ADR 0010](docs/adr/0010-bounded-jpeg-exif.md), [WebP ADR 0011](docs/adr/0011-static-webp-exif.md), [PNG ADR 0012](docs/adr/0012-static-png-exif.md), [comparison ADR 0013](docs/adr/0013-exif-dimension-comparison.md) and the [EXIF dimension validation record](docs/plans/2026-10-22-exif-dimension-comparison.md).
 
@@ -51,6 +51,7 @@ node apps/cli/dist/index.js inspect tests/fixtures/metadata/exif-little.webp
 node apps/cli/dist/index.js inspect tests/fixtures/metadata/exif-little.png
 node apps/cli/dist/index.js inspect tests/fixtures/metadata/dimensions-different.png
 node apps/cli/dist/index.js inspect tests/fixtures/metadata/xmp-attributes.jpg
+node apps/cli/dist/index.js inspect tests/fixtures/metadata/xmp-attributes.webp
 node apps/cli/dist/index.js probe tests/fixtures/lossless.webp
 node apps/cli/dist/index.js inspect tests/fixtures/alpha.webp
 node apps/cli/dist/index.js probe tests/fixtures/rgb24-top-down.bmp

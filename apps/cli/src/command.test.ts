@@ -20,7 +20,7 @@ afterEach(async () => {
 });
 
 describe('CLI commands', () => {
-  it.each(['xmp-attributes.jpg', 'xmp-elements.jpg'])(
+  it.each(['xmp-attributes.jpg', 'xmp-elements.jpg', 'xmp-attributes.webp', 'xmp-elements.webp'])(
     'inspects %s as separate recorded XMP evidence',
     async (name) => {
       const path = fileURLToPath(
@@ -30,7 +30,9 @@ describe('CLI commands', () => {
       if (result.exitCode !== 0 || !('evidence' in result.output))
         throw new Error('Expected report');
       expect(
-        result.output.evidence.find((item) => item.source.id === 'media-auth.jpeg-xmp'),
+        result.output.evidence.find(
+          (item) => item.source.id === `media-auth.${name.endsWith('.webp') ? 'webp' : 'jpeg'}-xmp`,
+        ),
       ).toMatchObject({
         status: 'DETECTED',
         details: {
@@ -45,7 +47,10 @@ describe('CLI commands', () => {
         },
       });
       expect(
-        result.output.evidence.find((item) => item.source.id === 'media-auth.jpeg-exif'),
+        result.output.evidence.find(
+          (item) =>
+            item.source.id === `media-auth.${name.endsWith('.webp') ? 'webp' : 'jpeg'}-exif`,
+        ),
       ).toHaveProperty('status', 'DETECTED');
       expect(result.output.conclusion).toMatchObject({
         origin: 'UNKNOWN',
@@ -55,12 +60,17 @@ describe('CLI commands', () => {
       const index = bytes.indexOf(Buffer.from('r:about=""'));
       expect(index).toBeGreaterThan(0);
       bytes[index + 9] = 88;
-      const malformed = join(temporaryDirectory, 'invalid-xmp.jpg');
+      const malformed = join(
+        temporaryDirectory,
+        `invalid-xmp.${name.endsWith('.webp') ? 'webp' : 'jpg'}`,
+      );
       await writeFile(malformed, bytes);
       const bad = await executeCommand(['inspect', malformed]);
       if (bad.exitCode !== 0 || !('evidence' in bad.output)) throw new Error('Expected report');
       expect(
-        bad.output.evidence.find((item) => item.source.id === 'media-auth.jpeg-xmp'),
+        bad.output.evidence.find(
+          (item) => item.source.id === `media-auth.${name.endsWith('.webp') ? 'webp' : 'jpeg'}-xmp`,
+        ),
       ).toHaveProperty('status', 'INCONCLUSIVE');
       expect(bad.output.evidence.find((item) => item.category === 'EXACT_IDENTITY')).toHaveProperty(
         'status',
@@ -156,9 +166,7 @@ describe('CLI commands', () => {
         throw new Error('Expected image analysis.');
       expect(
         inspected.output.analyzers.filter((analyzer) => analyzer.status === 'UNAVAILABLE'),
-      ).toHaveLength(
-        mimeType === 'image/jpeg' ? 7 : ['image/png', 'image/webp'].includes(mimeType) ? 8 : 9,
-      );
+      ).toHaveLength(['image/jpeg', 'image/webp'].includes(mimeType) ? 8 : 10);
       expect(inspected.output.conclusion.verdict).toBe('INCONCLUSIVE');
       expect(inspected.output.evidence.find((item) => item.category === 'METADATA')).toMatchObject({
         source: { id: 'media-auth.container-metadata', version: '0.5.0' },

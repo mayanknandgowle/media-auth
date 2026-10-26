@@ -13,6 +13,8 @@ try {
     'alpha.webp',
     'metadata/exif-little.webp',
     'metadata/exif-big.webp',
+    'metadata/xmp-attributes.webp',
+    'metadata/xmp-elements.webp',
     'metadata/dimensions-match.webp',
     'metadata/dimensions-different.webp',
   ]) {

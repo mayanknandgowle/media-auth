@@ -19,7 +19,7 @@ function selected(bytes: Uint8Array, size = bytes.length): SelectedFile {
 }
 
 describe('selected browser files', () => {
-  it.each(['xmp-attributes.jpg', 'xmp-elements.jpg'])(
+  it.each(['xmp-attributes.jpg', 'xmp-elements.jpg', 'xmp-attributes.webp', 'xmp-elements.webp'])(
     'exports selected local %s claims without mixing XMP with EXIF',
     async (name) => {
       const bytes = readFileSync(
@@ -27,7 +27,11 @@ describe('selected browser files', () => {
       );
       const report = await analyzeSelectedFile(selected(bytes));
       const view = createReportView(report);
-      expect(view.evidence.find((item) => item.source.id === 'media-auth.jpeg-xmp')).toMatchObject({
+      expect(
+        view.evidence.find(
+          (item) => item.source.id === `media-auth.${name.endsWith('.webp') ? 'webp' : 'jpeg'}-xmp`,
+        ),
+      ).toMatchObject({
         status: 'DETECTED',
         details: {
           observations: expect.arrayContaining([
@@ -40,7 +44,11 @@ describe('selected browser files', () => {
           ]),
         },
       });
-      expect(view.dimensionComparisons.has('media-auth.jpeg-xmp:recorded')).toBe(false);
+      expect(
+        view.dimensionComparisons.has(
+          `media-auth.${name.endsWith('.webp') ? 'webp' : 'jpeg'}-xmp:recorded`,
+        ),
+      ).toBe(false);
       expect(JSON.parse(view.json)).toEqual(report);
       expect(report.media.dimensions).toEqual({ width: 16, height: 8 });
       expect(report.conclusion.modification).toBe('UNKNOWN');
@@ -93,11 +101,11 @@ describe('selected browser files', () => {
     });
     expect(report.conclusion.verdict).toBe('INCONCLUSIVE');
     expect(report.analyzers.filter((item) => item.status === 'UNAVAILABLE')).toHaveLength(
-      name.endsWith('.jpg')
-        ? 7
-        : ['.webp', '.png'].some((extension) => name.endsWith(extension))
-          ? 8
-          : 9,
+      ['.jpg', '.webp'].some((extension) => name.endsWith(extension))
+        ? 8
+        : name.endsWith('.png')
+          ? 9
+          : 10,
     );
     const view = createReportView(report);
     expect(view.hash).toMatch(/^[a-f0-9]{64}$/);

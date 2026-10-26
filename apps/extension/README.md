@@ -6,11 +6,11 @@ Build from the repository root with `npm run build:extension`, or run `npm run p
 
 Choose a supported local file in the panel to inspect it without activeTab or any network request. PNG, 8-bit baseline/progressive JPEG, selected static WebP, single-image GIF, and 24-bit BI_RGB BMP subsets match the CLI. The file adapter validates size before reading, bounds its stream and deadline, and rejects size mismatches. Results are labeled `LOCAL_FILE`; page assets remain `ORIGINAL_WEB_ASSET`.
 
-Read the file facts, SHA-256, eleven evidence cards, including separate EXIF and JPEG XMP fields, reasons and limitations. **Download JSON report** explicitly saves evidence and may include a filename, never raw media bytes. Starting/failing a new operation invalidates the previous export. **Clear session** removes panel results and forgets worker selections; exported files remain user-controlled.
+Read the file facts, SHA-256, twelve evidence cards, including separate EXIF and JPEG/WebP XMP fields, reasons and limitations. **Download JSON report** explicitly saves evidence and may include a filename, never raw media bytes. Starting/failing a new operation invalidates the previous export. **Clear session** removes panel results and forgets worker selections; exported files remain user-controlled.
 
 ## Manual smoke test
 
-JPEG XMP has a separate eleventh evidence card for selected recorded creator-tool/date claims. Unicode/reference-decoded values remain literal text and JSON, without proving editing history or reconciling EXIF. Missing pre-scan packets, unsupported structures and unavailable reads stay distinct. See [ADR 0014](../../docs/adr/0014-bounded-jpeg-xmp.md).
+JPEG and static WebP XMP have separate source-specific evidence cards for selected recorded creator-tool/date claims. Unicode/reference-decoded values remain literal text and JSON, without proving editing history or reconciling EXIF. Missing packets within each declared carrier scope, unsupported structures and unavailable reads stay distinct. See [JPEG ADR 0014](../../docs/adr/0014-bounded-jpeg-xmp.md) and [WebP ADR 0015](../../docs/adr/0015-static-webp-xmp.md).
 
 EXIF cards also show recorded pixel width/height and a numeric comparison on encoded axes without orientation. Both pairs appear when complete; missing values explicitly prevent comparison. Agreement does not verify authenticity, and differences can reflect padding or historical metadata without proving editing. See [ADR 0013](../../docs/adr/0013-exif-dimension-comparison.md).
 

@@ -118,3 +118,14 @@ Run `node scripts/generate-gif-fixtures.mjs` explicitly to regenerate both; it u
 Run `node scripts/generate-bmp-fixtures.mjs` explicitly to regenerate both with Node byte operations. Normal checks consume checked-in bytes and CLI smoke pins their hashes. After `npx playwright install chromium`, `node scripts/verify-bmp-fixtures.mjs` independently decodes both and checks every RGBA pixel, including row order and padding. This validates these fixtures, not general BMP decodability from the probe. The explicit extension fixture gallery serves both BMP assets.
 
 `gallery.html`, served at `/gallery`, references all ten original fixtures for extension integration. The server has fixed routes for these known assets only; it never resolves arbitrary request paths into filesystem paths.
+
+## Recorded static WebP XMP fixtures
+
+`metadata/xmp-attributes.webp` and `metadata/xmp-elements.webp` are original Apache-2.0 derivatives of our WebP EXIF little/big fixtures. The exact UTF-8 packets from the corresponding JPEG XMP fixtures are carried raw in one XMP chunk (no JPEG identifier), with VP8X XMP flag, correct RIFF size and zero odd padding. Original EXIF/pixels remain unchanged. Selected claims match the JPEG XMP values above; the opaque nested spoof/URL is neither extracted nor fetched.
+
+| Fixture                        | Bytes | SHA-256                                                            |
+| ------------------------------ | ----- | ------------------------------------------------------------------ |
+| `metadata/xmp-attributes.webp` | 818   | `8a71b34f5f900886ee0adf4a1f514e0aeaac75aadaada48c1a524ccbedda4c5a` |
+| `metadata/xmp-elements.webp`   | 924   | `7a0d604fbe00c06e78b5f54ab2f93b499be1d50f68fc062fe28c823b6eadcdcc` |
+
+Generate explicitly with `node scripts/generate-webp-xmp-fixtures.mjs`; ordinary checks use pinned bytes. Independent Chromium verification checks every gray pixel at 16 × 8 (orientation is recorded separately). Fixed loopback routes support explicit local/page selection. No new probe corpus seed or parser dependency.

@@ -60,7 +60,7 @@ export function openMetadataReader(
         offset > sizeBytes - length
       )
         invalidMetadata(`${format} carrier range extends beyond input.`);
-      // Fixed headers or a bounded EXIF block; never arbitrary declared TIFF allocation.
+      // Fixed headers or a bounded metadata block; never arbitrary declared allocation.
       if (length > 65536)
         throw new MediaAuthError('RESOURCE_LIMIT', `${format} payload exceeds 64 KiB.`);
       const bytes = new Uint8Array(length);

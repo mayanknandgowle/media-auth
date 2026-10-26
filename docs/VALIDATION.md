@@ -1,6 +1,6 @@
 # Foundation validation
 
-Latest increment: [recorded JPEG XMP](plans/2026-10-26-jpeg-xmp-metadata.md), currently uncommitted. Dimension-comparison commit `54586a3` passed [Actions 40269451672](https://github.com/mayanknandgowle/media-auth/actions/runs/40269451672) for that exact head on Linux, Windows and browser jobs, including clean installs, independent fixtures and packaging. PNG eXIf commit `0c9fade` passed [Actions 39730803954](https://github.com/mayanknandgowle/media-auth/actions/runs/39730803954). Those runs predate the uncommitted XMP increment. Historical native Chrome observations below apply only to the foundation build originally tested.
+Latest increment: [recorded static WebP XMP](plans/2026-10-26-webp-xmp-metadata.md), currently uncommitted. JPEG XMP commit `7b876066f778343bbf4368516df2fad545c302db` passed [Actions 40273344535](https://github.com/mayanknandgowle/media-auth/actions/runs/40273344535) for that exact head: Linux/Windows quality/stress and browser jobs, including clean installs, independent fixtures and packaging. That run predates the current WebP XMP changes. Historical native Chrome observations below apply only to the foundation build originally tested.
 
 The current image-inspection client execution record is [2026-10-22](plans/2026-10-22-image-inspection-product.md), covering all five formats, explicit local files, readable reports, export/clear, and unpacked distribution. The historical foundation results below retain their original scope; they do not verify later native browser interactions or remote CI.
 

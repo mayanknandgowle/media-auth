@@ -22,7 +22,7 @@ export function readXmpPacket(
   if (bytes.length > 65504)
     throw new MediaAuthError(
       'RESOURCE_LIMIT',
-      'XMP packet exceeds standard JPEG allocation limit.',
+      'XMP packet exceeds project inspection allocation limit.',
     );
   let text: string;
   try {
